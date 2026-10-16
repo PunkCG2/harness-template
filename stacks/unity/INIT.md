@@ -2,6 +2,7 @@
 
 1. Create the project in **Unity Hub first** (an empty folder is required). Pick the version and pipeline.
 2. In that folder: `git init`; make sure `.gitignore` excludes `Library/`, `Temp/`, `Obj/`, `Logs/`, `UserSettings/`.
+   Configure `UnityYAMLMerge` as git merge tool for `*.unity` and `*.prefab` (`git config merge.unityyamlmerge.driver`, with `.gitattributes` entries).
    Set "Visible Meta Files" and "Force Text" serialization in Project Settings. Commit.
 3. `python <harness-template>\init.py --stack unity --into <project>`; review with `git status`; commit.
 4. Write the Editor executable path into `.harness/harness.toml` (`[verify] unity_path`) and the batch-mode test
