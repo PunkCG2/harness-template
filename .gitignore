@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Claude Code: local, per-machine files (keep .claude/skills/ tracked)
+/.claude/settings.local.json
+/.claude/worktrees/
+/.claude/scheduled_tasks.lock
+
+# Harness run state (the same line init.py adds to projects)
+.harness/state/
+
+# Scratch files
+_tmp*
+*.tmp
+scratch/
+scripts-tmp/
+
+# OS and editors
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
