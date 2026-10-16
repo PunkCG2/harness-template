@@ -1,5 +1,7 @@
 # .NET questions for /kickoff (skeleton)
 
+**Read before asking** (versions, tools, dependencies): `dotnet --version`, `global.json` and the project files. Only confirm what is found; ask the rest.
+
 - Target framework and SDK version? Web API, console, library?
 - Test framework (xUnit, NUnit, MSTest)? Integration tests that start the app?
 - Database or other services (in-memory for tests)?

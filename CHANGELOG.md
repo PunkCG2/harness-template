@@ -22,3 +22,4 @@
 - Harvest of bench-site notes: L-028 (offsetLeft), L-029 (visual conditions), L-030 (stopping chained commands), L-031 (proxy tracebacks), L-032 (heavy three-file tasks), L-033 (live display removed).
 - `/sync` honours `[sync] skip` in `harness.toml`; `harness.toml.tmpl` gains `[sync]` and `[template] path`.
 - spec §8.2/§8.3/§7/§12/§13 and `CLAUDE.md` updated: model discovery and loading rules, thinking policy, `/qa`, phase status and handoff.
+- `/kickoff` question review (L-034): atomic questions, detect before asking, no GPU / hand-typed numbers / machine-hours questions, fixed ladder, budget and git workflow, Unity questions rewritten (fixed decisions and who edits what).

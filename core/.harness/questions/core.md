@@ -1,39 +1,53 @@
 # Core question bank for /kickoff
 
 Ask ONE focused question at a time, in the author's language, with a recommended default when there is one.
-Skip a question the author already answered. Each item says why it exists (lesson id in docs/lessons.md of the template).
+Skip a question the author already answered. **Read before asking:** anything the repository, the installed tools or the
+local server can tell you (versions, installed models, packages, existing config) is detected and only confirmed.
+Each item says why it exists (lesson id in docs/lessons.md of the template).
+
+Order: 1, 2, then the stack questions (`stack.md`), then 3 to 8. The gates depend on the stack answers.
 
 ## 1. Purpose and audience
-- What is being built, for whom, and how will you know it is done?
+- What is being built and for whom?
+- How will you know it is done?
 - Is this project `production` or `learning`? (learning: the worker comments *why*, the reviewer explains corrections.)
 
 ## 2. Constraints
-- Where will it run or be published? Any deadline?
-- Language of the product and of the code comments?
-- Accessibility and **motion/animation policy** (respect or ignore OS reduced-motion)? (L-017)
+- Where will it run or be published?
+- Is there a deadline?
+- Language of the product?
+- Language of the code comments?
+- Accessibility requirements beyond the stack defaults?
 
 ## 3. Workers and machine
-- Which local models can be served, with what context length and output-token cap? GPU memory?
-- Which Claude models and subscription are available for escalation and review? (L-003, L-006)
-- Is a local server running (LM Studio, Bionic…) and on which address and port? (write it as `127.0.0.1:<port>`, not `localhost`; L-026)
-- Which local model is the **preferred** one and, optionally, which is the **secondary** one? The preferred model is the one the worker tries to load whenever no model is loaded; the secondary one is used if the preferred cannot be loaded (for example not enough memory). If another model is already loaded the worker uses it instead of loading a second one. (`model` and `fallback_model` in `harness.toml`; L-027)
+Detect first: `GET <url>/api/v0/models` lists the installed models and which one is loaded. Do not ask what it answers.
+- Is a local server running (LM Studio, Bionic…) and on which port? Write it as `127.0.0.1:<port>`, not `localhost`. (L-026)
+- From the installed models, which is the **preferred** one (the worker loads it whenever nothing is loaded)? Propose one from the list. (L-027)
+- Which is the **secondary** one, used if the preferred cannot be loaded (for example not enough memory)? Optional. If another model is already loaded the worker uses it. (L-027)
+- Which context length and output-token cap should the preferred model run with? Propose the model's own values.
+
+Fixed, not asked: the ladder is 2 local attempts without thinking, 1 with thinking, then Claude Haiku, Claude Sonnet and
+the main Claude session (L-024, L-025). Claude usage has no budget limit. Git workflow (branches, commits per task) is
+proposed by Claude from the project, not asked.
 
 ## 4. Gates
-- Commands for the **fast** gate (compile, quick tests) and the **full** gate. How long does each take?
-- Is a browser or other tool installed for visual checks (and which)? (L-008)
-- Line endings and formatter conventions? (L-013)
+- What is the command of the **fast** gate (compile, quick tests)?
+- What is the command of the **full** gate?
+- How long does each take, cold and warm? Run them once instead of asking, when they can run.
+- Is a browser or other tool installed for visual checks, and which? Detect it first. (L-008)
+- Formatter and line-ending conventions? Detect from config files first. (L-013)
 
 ## 5. Scope and protected data
-- Which files are generated and must never be edited by hand? Which folders are untouchable? (L-004)
+- Which files are generated and must never be edited by hand? Name concrete examples from the project. (L-004)
+- Which folders are untouchable?
 - Which tool output folders must be git-ignored? (L-010)
 
 ## 6. Task budget
-- Files per task and spec length for the chosen worker (start with 3 files / ~15 lines and calibrate). (L-003, L-006)
+- Start with 3 files and ~15 spec lines per task; ask only if the author wants other limits. (L-003, L-006)
 
-## 7. Numbers and code rules
-- Which values must never be typed by hand (they come from data or config)?
-- Conventions that tests should enforce? Allowed dependencies?
+## 7. Code rules
+- Conventions that tests should enforce?
+- Which dependencies are allowed? Detect the ones already in the project first.
 
 ## 8. Human verification and milestones
-- What do you test by eye, and how (Editor, browser, console, device)? These steps become "how to test it".
-- Optional: maximum machine hours per session (milestones above it get split).
+- What do you test by eye at the end of a milestone, and how (Editor, browser, console, device)? These steps become "how to test it".

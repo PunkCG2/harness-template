@@ -7,8 +7,13 @@ description: Interviews the author at the start of a project and writes CLAUDE.m
 
 1. Read `.harness/harness.toml`, `.harness/questions/core.md`, `.harness/questions/stack.md` and `.harness/INIT.md`.
    If `docs/spec.md` already has real content, ask whether to redo it or only fill the gaps.
-2. Ask **one focused question at a time**, in the author's language, offering a recommended default when there is one.
-   Skip anything already answered. Do not ask what you can read from the repository.
+2. **Detect first.** Read what the repository, the installed tools and the local server can tell you: tool and stack
+   versions, packages, existing config, and the installed models (`GET <url>/api/v0/models`). Show what you found and
+   ask only to confirm it or to fill the gaps.
+   Ask **one focused question at a time**, in the author's language, offering a recommended default when there is one.
+   Skip anything already answered. Order: purpose and constraints (core 1-2), the stack questions, then core 3-8.
+   The worker ladder, Claude budget and git workflow are not asked: use the template ladder, no budget limit, and
+   propose a git workflow that fits the project.
 3. After each area, summarise what you understood in two or three lines and let the author correct it.
 4. Write, in this order (show each result briefly, never dump long files):
    - `docs/spec.md` and `docs/design.md` (from the answers; keep `Open questions` honest);
