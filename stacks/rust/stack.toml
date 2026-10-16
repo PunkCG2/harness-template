@@ -1,0 +1,16 @@
+[stack]
+name = "rust"
+status = "skeleton"        # UNTESTED as a harness stack (the benchmark scripts do compile and test Rust with cargo)
+
+[gates]
+fast = ["cargo build", "cargo test"]
+full = ["cargo build", "cargo test", "cargo clippy -- -D warnings"]
+
+[timing]                   # the first build is cold and slow; later ones are incremental
+worker_minutes = 12
+gate_minutes = 10
+gate_floor_minutes = 1
+gate_ceiling_minutes = 30
+
+[verify]
+visual = "none"

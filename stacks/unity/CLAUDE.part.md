@@ -1,0 +1,3 @@
+- Unity: never hand-edit `.unity`, `.prefab`, `.meta`, `Library/`, `Temp/`; scripts live under `Assets/Scripts/`.
+- No `Find*`, `GetComponent` or LINQ inside `Update`; subscribe to events in `OnEnable`, unsubscribe in `OnDisable`.
+- Each milestone ends with steps the author tests in the Editor; do not start the next one without asking.

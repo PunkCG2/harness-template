@@ -1,0 +1,23 @@
+# {{project_name}}
+
+<!-- Written by /kickoff. Keep it SHORT: the local worker pays for every line in every task. -->
+
+Stack: {{stack}}. Purpose: (filled by /kickoff).
+
+## Where things are
+- What it is: docs/spec.md. How it looks / is structured: docs/design.md.
+- Tasks: docs/tasks/ (one file each, state in the front matter); tasks from human review (`/qa`) go in docs/tasks/qa/. Progress: docs/progress/progress.md.
+- Roles: .harness/roles/. Harness settings: .harness/harness.toml.
+
+## Rules
+- Do not edit protected or generated paths (listed in .harness/harness.toml `[scope] protected`).
+- Touch only the files listed in the task's "Files in scope".
+- No new dependencies unless the task says so. No temporary or debug files left behind.
+{{stack_rules}}
+
+## Harness notes
+- When the harness itself misbehaves (worker loops, wrong permission, bad criterion, missing question), append an entry
+  to docs/harness-notes.md (format inside that file).
+
+## Validation (before calling anything done)
+- Fast gate and full gate commands: .harness/harness.toml `[gates]`.

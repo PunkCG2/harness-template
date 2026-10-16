@@ -1,0 +1,2 @@
+- Python: work inside the project virtual environment; do not install packages (ask the author); type hints on public functions; docstrings on public items.
+- No `print` debugging left behind; tests with `pytest` next to the code they cover.

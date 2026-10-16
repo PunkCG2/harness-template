@@ -1,0 +1,4 @@
+{
+  "allow": ["Bash(cargo build*)", "Bash(cargo test*)", "Bash(cargo clippy*)", "Bash(cargo fmt*)"],
+  "deny": ["Bash(cargo publish*)"]
+}

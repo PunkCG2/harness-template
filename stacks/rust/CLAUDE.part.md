@@ -1,0 +1,2 @@
+- Rust: no `unwrap()`, `expect()`, `panic!`, `todo!` or `unsafe` outside tests unless the task allows it; propagate errors with `Result` and `?`.
+- Every `pub` item has a `///` doc comment; `cargo build` without warnings.

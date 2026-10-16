@@ -1,0 +1,4 @@
+{
+  "allow": ["Bash(cmake *)", "Bash(ctest *)", "Bash(make*)"],
+  "deny": []
+}

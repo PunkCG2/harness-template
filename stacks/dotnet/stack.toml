@@ -1,0 +1,16 @@
+[stack]
+name = "dotnet"
+status = "skeleton"        # UNTESTED as a harness stack (the benchmark scripts do build and test ASP.NET with dotnet)
+
+[gates]
+fast = ["dotnet build", "dotnet test"]
+full = ["dotnet build", "dotnet test"]
+
+[timing]
+worker_minutes = 12
+gate_minutes = 10
+gate_floor_minutes = 1
+gate_ceiling_minutes = 30
+
+[verify]
+visual = "none"

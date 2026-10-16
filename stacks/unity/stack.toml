@@ -1,0 +1,18 @@
+[stack]
+name = "unity"
+status = "skeleton"        # UNTESTED: fill the real commands at /kickoff and calibrate
+
+[gates]
+# Replace <UNITY> with the full path of the Editor executable for this project's version.
+fast = []                  # e.g. "<UNITY> -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults .harness/state/editmode.xml -quit"
+full = []                  # EditMode + PlayMode tests
+
+[timing]                   # minutes; the Editor start and domain reload make the first pass slow (cold vs warm)
+worker_minutes = 15
+gate_minutes = 15
+gate_floor_minutes = 2
+gate_ceiling_minutes = 60
+
+[verify]
+visual = "unity-editor"    # the author tests each milestone in the Unity Editor ("how to test it")
+unity_path = ""            # executable used for batch mode

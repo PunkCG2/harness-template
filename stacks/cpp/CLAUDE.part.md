@@ -1,0 +1,2 @@
+- C++: no `new`/`delete`/`malloc`; use standard containers and smart pointers; `#pragma once`; no `using namespace std` in headers.
+- Return `std::optional<T>` for results that may not exist; mark non-mutating methods `const`; compile without warnings (`-Wall -Wextra` or `/W4`).

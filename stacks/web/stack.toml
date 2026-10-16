@@ -1,0 +1,17 @@
+[stack]
+name = "web"
+status = "tested"          # tested with Vite + vanilla JS + Vitest; plain HTML5 and other frameworks are untested
+
+[gates]
+fast = ["npm test"]
+full = ["npm test", "npm run build"]
+
+[timing]                   # minutes; calibrated automatically (spec section 8.5)
+worker_minutes = 10
+gate_minutes = 5
+gate_floor_minutes = 1
+gate_ceiling_minutes = 20
+
+[verify]
+visual = "browser"         # check layouts in a real browser (Playwright MCP with an installed Chromium browser, or by hand)
+widths = [320, 375, 800, 900, 1024, 1280, 1920]

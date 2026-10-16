@@ -1,0 +1,4 @@
+- Web: colours, fonts and spacing only from the design tokens; visible texts only from the language dictionaries.
+- Verify UI work in a real browser at the widths in `.harness/harness.toml` `[verify]` before calling it done.
+- After switching git branches restart the dev server (stale CSS); never commit tool output folders.
+- Always close the browser after UI checks (`browser_close` for Playwright MCP; `try/finally` in scripts).

@@ -1,0 +1,17 @@
+[stack]
+name = "python"
+status = "skeleton"        # UNTESTED as a harness stack
+
+[gates]
+fast = ["python -m pytest -q"]
+full = ["python -m pytest -q", "python -m ruff check .", "python -m mypy ."]   # ruff and mypy are optional: remove if unused
+
+[timing]
+worker_minutes = 8
+gate_minutes = 5
+gate_floor_minutes = 1
+gate_ceiling_minutes = 15
+
+[verify]
+visual = "none"
+venv = ".venv"

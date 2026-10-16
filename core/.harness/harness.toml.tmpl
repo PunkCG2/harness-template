@@ -1,0 +1,45 @@
+# Project settings for the harness. Written by init.py, completed by /kickoff. Owned by the project.
+
+[project]
+name = "{{project_name}}"
+mode = "production"            # production | learning
+initialized = "{{date}}"
+
+[template]
+version = "{{template_version}}"   # git hash of the harness template used (for /sync)
+
+[workers]
+# Escalation ladder, cheapest first. The last step is always "main-claude" (the interactive session).
+ladder = ["local", "claude-haiku", "claude-sonnet", "main-claude"]
+
+[workers.local]
+kind = "anthropic-compatible-server"
+url = "http://127.0.0.1:1234"   # 127.0.0.1, not localhost: localhost may resolve to IPv6 and reach another program
+model = ""                     # preferred model: the one loaded when nothing is loaded (empty = choose from the server's list)
+fallback_model = ""            # optional secondary model, used if the preferred one cannot be loaded
+attempts = 3                   # attempts before escalating
+max_output_tokens = 16000
+strip_thinking = false         # true: remove thinking/output_config/context_management on EVERY attempt
+strip_thinking_attempts = 2    # otherwise only the first N attempts run without thinking (faster, same quality in tests; L-024)
+
+[workers.claude-haiku]
+kind = "claude-cli"
+model = "haiku"
+attempts = 2
+
+[workers.claude-sonnet]
+kind = "claude-cli"
+model = "sonnet"
+attempts = 1
+
+[budget]
+files_per_task = 3             # calibrate to the worker; see docs/lessons.md L-003, L-006
+spec_lines_per_task = 15
+session_max_hours = 0          # 0 = no limit; if set, milestones estimated above it are split
+
+[scope]
+protected = []                 # paths no worker may edit, e.g. ["data/raw/**"]
+temp_patterns = ["_tmp*", "*.tmp", "scratch/", "scripts-tmp/"]
+
+# ---- stack section (copied from stacks/{{stack}}/stack.toml) ----
+{{stack_toml}}

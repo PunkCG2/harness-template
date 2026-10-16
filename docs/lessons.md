@@ -1,0 +1,33 @@
+# Lessons learned
+
+Each lesson comes from a real project and states where it applies. New ones arrive through `/harvest`.
+Source `bench-site` = the first project that used this harness (a Vite + vanilla JS static site, 27 tasks).
+
+| id | applies to | lesson | remedy |
+|---|---|---|---|
+| L-001 | core | Claude Code sends a `role: "system"` entry inside `messages`; some chat templates reject it ("System message must be at the beginning"). | Local proxy moves it into the `system` field. |
+| L-002 | core | The default Claude Code prompt (~36k tokens with all tools) does not fit a 32k context. | `--tools` with a small set and a short `--system-prompt`. |
+| L-003 | core | A local 27B model overflows its output (`exceeded the 16000/32000 output token maximum`) on UI tasks with 3–4 new files and a long spec; raising or lowering the cap did not help, `/no_think` did not either. | Split into rounds: files first, tests in a second round; one file per write call; short spec (~15 lines); inner loop retries with a hardened prompt. Lead to test: strip `thinking` in the proxy. |
+| L-004 | core | Workers leave stray files (`scripts-tmp/`, `tests/_tmp_*.mjs`, debug tests with `console.log`) and edit files outside scope (task status). | Scope guard after every delivery; always read `git status` and the diff stat before merging. |
+| L-005 | core | A worker can hit `max turns` and still have finished correctly (or the reverse). | Judge by files and gate results, not by the exit status. |
+| L-006 | core | Task limits (files per task, spec length) came from the worker's capacity, not from the stack. | Make them project parameters, calibrated to the worker. |
+| L-007 | core | Acceptance criteria written by the planner can be wrong or too strict (a rule per file when a global rule already covered it; a "no border" rule that ignored the browser's default button border). | Check criteria against what the design already guarantees; review failing criteria before blaming the worker. |
+| L-008 | core | A criterion that needs a browser cannot be verified if no browser is installed for the automation tool. | Ask at `/kickoff` which browser exists; keep the check as a milestone "how to test"; Playwright MCP can drive an installed Chromium browser (Edge, Opera GX) — Firefox needs Playwright's own build. |
+| L-009 | core (Windows) | PowerShell 5.1 reads UTF-8 without BOM badly; scripts with accents break. | Keep launcher scripts ASCII-only, or use Python. |
+| L-010 | core | `git add -A` committed tool output (`.playwright-mcp/`). | Run `git status` first; ignore tool output folders at init. |
+| L-011 | core | Patching files with shell/heredoc escapes corrupted them (`\n`, `\b`, `/` in replacement text). | Use the editor tool for exact replacements; if a script is needed, use raw strings or a different `sed` delimiter. |
+| L-012 | core | Tests that hard-code "exactly 2 models" or find a model by a derived label break when data grows. | Count from the data source and find records by a stable id. |
+| L-013 | core | Line-ending warnings (`LF will be replaced by CRLF`) made a generated file differ from its test. | Normalise line endings (`.gitattributes`) and regenerate with the official generator. |
+| L-014 | stack:web | CSS specificity traps: `.table th` beat `.table__id`; `display:block` on rows overrides the `hidden` attribute. | Use `th.cell` selectors and an explicit `[hidden]{display:none}` rule; check mobile layouts in a real browser. |
+| L-015 | stack:web | The dev server kept serving stale CSS after switching git branches. | `touch` the file or restart the dev server before judging a screenshot. |
+| L-016 | stack:web | Counter animations printed fractional values (`-77.29244 %`). | Round inside the formatter, not only at the end of the animation. |
+| L-017 | stack:web | The author's OS had animations disabled, so nothing animated; the project rule "respect `prefers-reduced-motion`" hid the feature. | Ask the motion policy at `/kickoff` and record it in `CLAUDE.md`. |
+| L-018 | stack:web | Narrow screens: long labels in a selector wrapped to 4 lines. | `white-space: nowrap` with horizontal scroll and `justify-content: safe center`. |
+| L-019 | project | Model labels derived from the first word collided; full names plus quantisation are unique. | Use the full model name as label and `org/name@quant` as id. |
+| L-020 | stack:web | Browser tests left browsers open; the author closed windows by hand. | Always call `browser_close` after UI checks; scripts close the browser in `finally`. |
+| L-021 | stack:web | After merging back to main the dev server kept serving the old CSS; the author saw no change and reported it as a defect. | Touch the changed files after the merge (task skill, step merge). Check computed styles before blaming the code. |
+| L-022 | core | The per-machine worker state lived inside the repo and showed up as out-of-scope files and in the worker commit. | The scope guard ignores `.harness/state/` and the commit excludes it (the template gitignore has it too). |
+| L-024 | core | Stripping `thinking`/`output_config`/`context_management` (`strip_thinking`) with the local qwen3.8-27b: 4 small coding tasks, same result (hidden tests 19/19 in both modes, first attempt), 2-6x faster (e.g. 136 s -> 24 s) and 6-18x fewer output tokens. | Default `strip_thinking_attempts = 2`: attempts 1-2 without thinking, attempt 3 with it (a safety net for hard tasks). Revisit with harder tasks. |
+| L-025 | core | Same 3-task A/B with gemma-4-26b-a4b-qat: result equal or better with thinking stripped (hidden tests 19/19 stripped vs 18/19 not), 1.9-3.8x faster (149 s -> 40 s, 134 s -> 69 s, 88 s -> 35 s). | The `strip_thinking_attempts = 2` default holds for both models tried (Qwen3.8 and Gemma 4). Still only easy, well-specified tasks. |
+| L-026 | core | `localhost` resolved to IPv6 `::1`, where a Vite dev server had taken port 1234; the worker got HTML instead of the model list. | Use `127.0.0.1` for the local server and report non-JSON replies clearly. |
+| L-027 | core | A second load order for a model that is already loaded creates a second instance (`name:2`) and uses the memory twice. It happened when two worker runs overlapped, each seeing "not loaded". | Check `loaded_instances` before loading, never repeat a load order (an error reply may still be loading), serialize loading with a lock file, allow one run per project (`worker.lock`, exit code 6), and never load a second model on top of a loaded one: use the loaded one. Preferred and secondary models come from `harness.toml`. |

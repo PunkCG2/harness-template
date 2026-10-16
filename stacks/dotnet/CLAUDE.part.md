@@ -1,0 +1,2 @@
+- .NET: async all the way with `CancellationToken`; no `.Result` / `.Wait()`; dependencies through DI; limits from options classes, never literals.
+- Public types and members have `/// <summary>`; `dotnet build` without warnings.

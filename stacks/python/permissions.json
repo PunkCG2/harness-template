@@ -1,0 +1,4 @@
+{
+  "allow": ["Bash(python -m pytest*)", "Bash(python -m ruff*)", "Bash(python -m mypy*)", "Bash(python -m venv*)"],
+  "deny": ["Bash(pip install*)", "Bash(pip3 install*)"]
+}

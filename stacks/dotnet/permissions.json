@@ -1,0 +1,4 @@
+{
+  "allow": ["Bash(dotnet build*)", "Bash(dotnet test*)", "Bash(dotnet format*)"],
+  "deny": ["Bash(dotnet nuget push*)"]
+}

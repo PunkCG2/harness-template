@@ -1,0 +1,4 @@
+{
+  "allow": [],
+  "deny": ["Edit(Library/**)", "Edit(Temp/**)", "Edit(ProjectSettings/ProjectVersion.txt)"]
+}
