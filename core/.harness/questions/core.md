@@ -10,6 +10,10 @@ Order: 1, 2, then the stack questions (`stack.md`), then 3 to 8. The gates depen
 ## 1. Purpose and audience
 - What is being built and for whom?
 - How will you know it is done?
+- Describe the **feel** you want in your own words: style, tone, what matters most to you (speed, simplicity,
+  robustness, polish), references to other products. Add anything else that may seem minor but could affect
+  architecture or implementation. Free text; Claude turns it into architecture notes in `docs/design.md`.
+- Is the first milestone a minimal prototype or a usable first version?
 - Is this project `production` or `learning`? (learning: the worker comments *why*, the reviewer explains corrections.)
 
 ## 2. Constraints
@@ -48,6 +52,7 @@ proposed by Claude from the project, not asked.
 ## 7. Code rules
 - Conventions that tests should enforce?
 - Which dependencies are allowed? Detect the ones already in the project first.
+- Preferred architecture? Propose the stack's default (see `stack.md`) and let the author correct it.
 
 ## 8. Human verification and milestones
 - What do you test by eye at the end of a milestone, and how (Editor, browser, console, device)? These steps become "how to test it".

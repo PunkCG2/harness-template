@@ -11,20 +11,21 @@ The project already exists in the folder where `/kickoff` runs. **Read before as
 Game first, then technical.
 - What kind of game is it: 2D or 3D, camera (top-down, side, first person…) and genre?
 - Single player or multiplayer? If multiplayer, which model (co-op, versus, dedicated server, relay)?
-- Describe the **feel** you want in your own words: pace, weight of movement, responsiveness, game juice, mood, references
-  to other games. Add anything else that may seem minor but could affect architecture or implementation (determinism,
-  replays, mods, many entities, long sessions, accessibility, controller support…). Free text; Claude turns it into
-  architecture notes in `docs/design.md`.
 - Which performance target: frames per second and minimum hardware (PC, mobile, Quest)? If XR, apply the `meta-vr` skills.
 - Where does art and audio come from: placeholders (primitives, free assets) or final assets? Who imports them and with
   which import settings?
-- Scope of the first milestone: minimal playable prototype or vertical slice?
 - Is there save/load? If so, where and in which format?
-- Preferred architecture? Default: ScriptableObjects for data, C# events for communication, no singletons.
 - Which target platforms, if the build settings do not say?
 - Tests: EditMode, PlayMode or both? Propose from the existing test assemblies.
 - Which folder and namespace convention? Propose `Game.<Folder>` when the project has none.
 - Which packages beyond the ones in `manifest.json` may the worker add? Default: none.
+
+## Hints for the core "feel" question
+Prompt the author on: pace and weight of movement, responsiveness, game juice, mood, determinism, replays, mods, many
+entities, long sessions, accessibility, controller support.
+
+## Default architecture
+ScriptableObjects for data, C# events for communication, no singletons.
 
 ## Fixed, not asked
 - Input: the new Input System.
