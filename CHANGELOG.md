@@ -26,3 +26,4 @@
 - Unity questions: game type, multiplayer, free-text feel, performance target, art source, first-milestone scope, save/load, architecture; fixed scene-wiring, `UnityYAMLMerge` and editor-script rules.
 - Kickoff review of web (analytics, SEO, content source), python, dotnet, rust and cpp; common questions (feel, first milestone, architecture) moved to core.
 - Every stack's `INIT.md` is now a full install guide: prerequisites, steps, what `init.py` does, what happens after, `/sync` and `/harvest`.
+- README: requirements, stack status, kickoff behaviour and install guides; quick start uses `<harness-template>` instead of a local path.
