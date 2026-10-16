@@ -6,6 +6,7 @@ description: Compares a project's managed harness files with the template and ap
 # Sync (run in a project)
 
 Managed files (safe to replace): `.harness/run_worker.py`, `.harness/questions/`, `.claude/skills/`.
+Paths listed in `[sync] skip` of `.harness/harness.toml` are never replaced (for example skills a project translated).
 Owned files (never touch): `CLAUDE.md`, `docs/`, `.harness/harness.toml`, `.harness/roles/`, `.claude/settings.json`.
 
 1. Ask for the template folder if it is not in `.harness/harness.toml` (`[template] path`). Read its `CHANGELOG.md`

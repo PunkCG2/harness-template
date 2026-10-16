@@ -50,7 +50,7 @@ harness-template/
 │  │  └─ run_worker.py          unified worker script (phase 2, see §12)
 │  └─ docs/
 │     ├─ spec.md.tmpl  design.md.tmpl  harness-notes.md.tmpl
-│     ├─ tasks/_template.md
+│     ├─ tasks/_template.md      (tasks born from `/qa` go in tasks/qa/, created on demand)
 │     └─ progress/progress.md.tmpl
 ├─ stacks/<stack>/              web (tested), unity, rust, dotnet, cpp, python (skeletons)
 │  ├─ stack.toml                status, fast/full gates, initial timings
@@ -127,6 +127,10 @@ reads it together with task states and git, and reports: last finished milestone
 pending tasks, any half-done task branch (continue or discard), notes not yet harvested, a newer template version.
 Then it asks whether to continue.
 
+After the author tests a milestone by eye, `/qa` turns what they saw into numbered items in `docs/tasks/qa/qa-<milestone>.md`,
+creates one task per item (in `docs/tasks/qa/`, each with its own check), waits for approval and then hands them to `/task`. The
+milestone is not closed while its QA log has open items.
+
 ## 8. The worker
 
 A single portable Python script, `.harness/run_worker.py`, replaces the PowerShell launcher and the separate proxy.
@@ -137,20 +141,33 @@ Invoked by `/task` as `python .harness/run_worker.py <task.md> [--model X]`.
 - **Local server** speaking the Anthropic API (LM Studio, Bionic…). Claude Code (`claude -p`) is pointed at an
   **in-process proxy** on a free port that moves any `role: "system"` entry out of `messages` into `system`
   (otherwise some chat templates fail with "System message must be at the beginning"). The proxy can also strip the
-  `thinking`, `output_config` and `context_management` fields (open experiment, §13).
+  `thinking`, `output_config` and `context_management` fields (`strip_thinking`, see §8.3).
 - **Claude** (`claude -p --model haiku|sonnet`), no proxy.
 
 Claude Code is started with a reduced tool set (`--tools`), a short `--system-prompt` (the implementer role), and an
 output cap (`CLAUDE_CODE_MAX_OUTPUT_TOKENS`) so a looping model fails fast; the default prompt (~36k tokens) would not
 fit a 32k context.
 
-### 8.2 Model discovery
+### 8.2 Model discovery and loading
 
-`GET /api/v0/models` lists **downloaded** models with `state` and `type`; chat models are `llm`/`vlm`. If none is
-loaded the script lists the available ones. Loading uses `POST /api/v1/models/load {"model": id}` (404/405 → the
-server loads on first use); unloading uses `POST /api/v1/models/unload {"instance_id": ...}`. When started by Claude
-there is no keyboard: the script prints the list and exits with a dedicated code, Claude asks the author and runs it
-again with `--model`. The choice is stored in `.harness/state/` (git-ignored).
+`GET /api/v0/models` lists **downloaded** models with `state` and `type` (chat models are `llm`/`vlm`);
+`GET /api/v1/models` adds `loaded_instances`. Loading uses `POST /api/v1/models/load {"model": id}` (404/405 → the server
+loads on first use); unloading uses `POST /api/v1/models/unload {"instance_id": ...}`. Always write the address as
+`127.0.0.1:<port>`, never `localhost` (L-026).
+
+Which model is used (`[workers.local]` in `harness.toml`):
+- `model` is the **preferred** model and `fallback_model` an optional **secondary** one (`/kickoff` asks for both).
+- `--model X` on the command line wins over the configuration.
+- If a model is already loaded the script uses it (the preferred one first, then the secondary, then whatever is loaded, with a
+  note) instead of loading another on top of it.
+- If nothing is loaded it tries to load the preferred model and, if that fails (for example not enough memory), the secondary.
+- With nothing configured it uses the only loaded model, or asks (or prints the list and exits with a dedicated code when started by
+  Claude, which asks the author and runs again with `--model`). The last model used is stored in `.harness/state/` (git-ignored).
+
+Loading is guarded because a second load order for a loaded model creates a second instance that uses the memory twice
+(L-027): the loaded instances are checked first, a load order is never repeated (after an error the script waits and looks again),
+loading is serialised with a lock file, and only **one run per project** is allowed at a time (`.harness/state/worker.lock`,
+exit code 6).
 
 ### 8.3 Ladder and attempts
 
@@ -162,6 +179,9 @@ Configured per project, for example `local → claude-haiku → claude-sonnet �
   gates the retry includes the failure output and the files outside scope.
 - A timed-out attempt counts as failed; what it wrote is kept so the next attempt continues from there.
 - The last step is the main Claude session, which takes over by hand.
+- **Thinking policy.** `strip_thinking_attempts = 2` (default): attempts 1 and 2 of the local worker run with the `thinking`,
+  `output_config` and `context_management` fields removed (same quality, 2-6x faster in the tests, L-024, L-025); attempt 3 keeps them
+  as a safety net. `strip_thinking = true` strips every attempt. Only easy tasks have been measured so far.
 
 ### 8.4 Inner loop (automatic)
 
@@ -235,10 +255,14 @@ Unreal can be added later as another stack.
    adopt it in `bench-site` first, then in the template.
 3. **Phase 3:** `/harvest` and `/sync` exercised on a second real project; promote skeleton stacks as they are used.
 
-## 13. Open items (small spikes before or during phase 2)
+Status: phases 1 and 2 are done (`bench-site` was the first project to use the unified worker). Phase 3 starts with the next
+project (a Unity one); `bench-site` already carries `[template]` data in its `harness.toml` so `/sync` can compare against this repository.
 
-- Confirm `/api/v0/models`, `/api/v1/models/load` and `/unload` behave the same in Bionic as in LM Studio.
-- Does stripping `thinking`/`output_config`/`context_management` in the proxy stop the output-token overflows?
-  (`/no_think` and lower output caps did not.)
+## 13. Open items
+
+- Resolved: Bionic serves `/api/v0/models`, `/api/v1/models` (with `loaded_instances`), `/load` and `/unload` like LM Studio.
+- Resolved: stripping `thinking`/`output_config`/`context_management` in the proxy keeps quality and is much faster (L-024, L-025);
+  it does not by itself explain the early output overflows (those need smaller tasks, L-003).
+- To measure on harder tasks: the thinking policy of §8.3 (only small, well-specified tasks so far).
 - Real Unity batch-mode timings; how to run Unity tests headless on the author's machine.
 - Plain-HTML5 web projects: which gates make sense.

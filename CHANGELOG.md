@@ -19,3 +19,6 @@
 - Default server URL is `127.0.0.1:1234`, not `localhost` (a dev server on IPv6 `::1:1234` answered instead of the model server; L-026).
 - Model loading: instances are checked before loading, a load order is never repeated, loading is serialized with a lock, only one run per project at a time (exit code 6), and a model that is already loaded is used instead of loading another (L-027).
 - `model` is now the preferred model and `fallback_model` an optional secondary one; `/kickoff` asks for both.
+- Harvest of bench-site notes: L-028 (offsetLeft), L-029 (visual conditions), L-030 (stopping chained commands), L-031 (proxy tracebacks), L-032 (heavy three-file tasks), L-033 (live display removed).
+- `/sync` honours `[sync] skip` in `harness.toml`; `harness.toml.tmpl` gains `[sync]` and `[template] path`.
+- spec §8.2/§8.3/§7/§12/§13 and `CLAUDE.md` updated: model discovery and loading rules, thinking policy, `/qa`, phase status and handoff.

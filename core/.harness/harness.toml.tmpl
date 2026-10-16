@@ -5,7 +5,11 @@ name = "{{project_name}}"
 mode = "production"            # production | learning
 initialized = "{{date}}"
 
+[sync]
+skip = []                    # paths /sync must leave alone, e.g. [".claude/skills"] when the project translated them
+
 [template]
+path = ""                      # where the template folder is on this machine (used by /sync)
 version = "{{template_version}}"   # git hash of the harness template used (for /sync)
 
 [workers]

@@ -3,11 +3,18 @@
 Reusable starter kit for AI-assisted development with a local-first worker. Read `docs/spec.md` (approved design) and
 `docs/lessons.md` before changing anything.
 
-## State
-- Phase 1 is done: spec, lessons, `init.py` (+ tests), core templates, stack skeletons (web tested; unity, rust, dotnet,
-  cpp, python are skeletons).
-- Phase 2 is done: `core/.harness/run_worker.py` (+ `tests/test_run_worker.py`), adopted in `bench-site` (tasks 030, 031 passed first attempt). Attempts 1-2 of the local worker run with thinking stripped (`strip_thinking_attempts = 2`, L-024); the third runs with it. The ladder was seen working for real (local x3 -> Haiku). Untested: `--model` selection when nothing is loaded.
-- Phase 3: exercise `/harvest` and `/sync` on a second real project.
+## State (handoff)
+- Phases 1 and 2 are done: spec, lessons (L-001..L-033), `init.py`, core templates, six stack skeletons (web tested), the
+  unified worker `core/.harness/run_worker.py` (58 tests in `tests/`) and the skills kickoff, plan, task, qa, resume, sync
+  (+ harvest at the repo root).
+- First project that used it: `bench-site` (`E:\IA\bench-site`, a Vite site). Its `docs/harness-notes.md` has been harvested up to the
+  commit that introduced this handoff; its `harness.toml` carries `[template] version` and `[sync] skip = [".claude/skills"]`
+  (its skills are in Spanish, so `/sync` must not overwrite them).
+- **Next (phase 3):** use the template on a real Unity project (`init.py --stack unity`), then `/harvest <project>` for its notes and
+  `/sync` from the project when this repository changes. The `unity` stack is a skeleton: real batch-mode timings, the headless test
+  command and the stack questions are still to be confirmed. Compare the thinking policy (§8.3) on harder tasks.
+- Decisions to respect: no cost/token logging; no live progress display (L-033); local server address as `127.0.0.1` (L-026);
+  tasks of at most ~3 files and ~15 spec lines; QA tasks live in `docs/tasks/qa/`.
 
 ## Rules
 - Everything in this repository is English. The author may talk in Spanish.
