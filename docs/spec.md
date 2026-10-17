@@ -266,3 +266,4 @@ project (a Unity one); `bench-site` already carries `[template]` data in its `ha
 - To measure on harder tasks: the thinking policy of §8.3 (only small, well-specified tasks so far).
 - Real Unity batch-mode timings; how to run Unity tests headless on the author's machine.
 - Plain-HTML5 web projects: which gates make sense.
+- Future idea (not scheduled): Claude Code Projects (beta, Sept 2026) splits a goal across parallel cloud sessions. Cloud sessions clone the repo from GitHub and cannot reach the local model server, so they do not fit the local worker today. Revisit when Projects can run in a local environment; until then it could only take over the Claude-tier work (tasks that start at `claude-sonnet`) on stacks whose gates run in the cloud.

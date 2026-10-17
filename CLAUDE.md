@@ -24,6 +24,7 @@ Reusable starter kit for AI-assisted development with a local-first worker. Read
 - Keep `python -m unittest discover -s tests` green. Every change that comes from a real project gets a row in
   `docs/lessons.md` and a line in `CHANGELOG.md`.
 - Open spikes (spec section 13): stripping `thinking` in the proxy, real Unity batch timings. Confirmed: Bionic model endpoints.
+- Future idea (spec §13): Claude Code Projects for parallel work, only when it can run in a local environment.
 
 ## Context for the worker script
 - The local server (LM Studio or Bionic) listens on `http://localhost:1234`; model list: `GET /api/v0/models`; load:

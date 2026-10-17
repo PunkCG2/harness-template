@@ -29,3 +29,4 @@
 - README: requirements, stack status, kickoff behaviour and install guides; quick start uses `<harness-template>` instead of a local path.
 - Added a root `.gitignore` (Python caches, local Claude Code files, harness state, scratch, OS/editor files) and untracked `__pycache__`.
 - Added `.gitattributes` (LF in the repository, CRLF only for Windows scripts) to stop the line-ending warnings.
+- Spec §13 and handoff: noted Claude Code Projects as a future idea, to revisit when it can run in a local environment.
