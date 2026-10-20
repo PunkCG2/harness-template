@@ -4,6 +4,7 @@
 name = "{{project_name}}"
 mode = "production"            # production | learning
 initialized = "{{date}}"
+base_branch = ""               # branch tasks start from and merge into; empty = `main` or `master`, whichever exists
 
 [sync]
 skip = []                    # paths /sync must leave alone, e.g. [".claude/skills"] when the project translated them
@@ -43,7 +44,7 @@ session_max_hours = 0          # 0 = no limit; if set, milestones estimated abov
 
 [scope]
 protected = []                 # paths no worker may edit, e.g. ["data/raw/**"]
-temp_patterns = ["_tmp*", "*.tmp", "scratch/", "scripts-tmp/"]
+temp_patterns = ["_tmp*", "*.tmp", "scratch/", "scripts-tmp/", "__pycache__/"]
 
 # ---- stack section (copied from stacks/{{stack}}/stack.toml) ----
 {{stack_toml}}

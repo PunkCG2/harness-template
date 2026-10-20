@@ -13,8 +13,8 @@ What it does for one task:
   1. picks the branch and, for the local tier, the model (asks via exit code 3 when there is no keyboard);
   2. runs the escalation ladder from .harness/harness.toml (local -> claude-haiku -> claude-sonnet -> main-claude);
      the local tier gets several attempts before escalating;
-  3. after every attempt: scope guard (deletes obvious temp files, flags files outside the task scope) and the fast
-     gates; failures go back to the same worker with a retry prompt (hardened after an overflow or empty result);
+  3. after every attempt: scope guard (deletes obvious temp files, flags files outside the task scope), the fast
+     gates and, once they pass, the full gates; failures go back to the same worker with a retry prompt (hardened after an overflow or empty result);
   4. when everything passes: commits on the task branch and prints a REVIEW BRIEF for Claude.
 
 Exit codes: 0 delivered | 2 local server unreachable | 3 a model must be chosen (list printed) |
@@ -47,7 +47,7 @@ except Exception:
 EXIT_OK, EXIT_SERVER, EXIT_NEEDS_MODEL, EXIT_LADDER, EXIT_CONFIG, EXIT_BUSY = 0, 2, 3, 4, 5, 6
 
 DEFAULTS = {
-    "project": {"base_branch": "main"},
+    "project": {"base_branch": ""},
     "workers": {
         "ladder": ["local", "claude-haiku", "claude-sonnet", "main-claude"],
         "local": {"kind": "anthropic-compatible-server", "url": "http://127.0.0.1:1234", "model": "",
@@ -155,6 +155,13 @@ def branch_exists(root, name):
     return git(root, "show-ref", "--verify", "--quiet", f"refs/heads/{name}").returncode == 0
 
 
+def resolve_base_branch(root, configured=""):
+    """The configured base branch if it exists; with none configured, `main` or `master`, whichever exists.
+    None when nothing fits."""
+    names = [configured] if configured else ["main", "master"]
+    return next((n for n in names if branch_exists(root, n)), None)
+
+
 def ensure_branch(root, branch, base):
     if current_branch(root) == branch:
         return
@@ -192,7 +199,18 @@ def path_matches(path, pattern):
 
 
 def is_temp(path, patterns):
-    return any(fnmatch.fnmatch(seg, pat) for seg in path.replace("\\", "/").split("/") for pat in patterns)
+    """A path segment matches a pattern; a trailing '/' in a pattern ("scratch/") names a folder and is ignored."""
+    pats = [p.rstrip("/") for p in patterns if p.rstrip("/")]
+    return any(fnmatch.fnmatch(seg, pat) for seg in path.replace("\\", "/").split("/") for pat in pats)
+
+
+def is_new_meta(path, flag, allowed):
+    """Unity writes a .meta file next to every new asset or folder: an untracked X.meta is allowed when X is in scope
+    or is a folder that holds an in-scope path. A modified (tracked) .meta is still checked like any other file."""
+    if flag != "??" or not path.endswith(".meta"):
+        return False
+    base = path[: -len(".meta")]
+    return any(path_matches(base, a) or a.replace("\\", "/").startswith(base + "/") for a in allowed)
 
 
 def scope_check(root, allowed, protected, temp_patterns, clean=True):
@@ -204,6 +222,8 @@ def scope_check(root, allowed, protected, temp_patterns, clean=True):
     removed, outside, prot = [], [], []
     for flag, path in changed_files(root):
         if path.startswith("docs/tasks/logs/"):
+            continue
+        if allowed and is_new_meta(path, flag, allowed):
             continue
         if any(path_matches(path, pat) for pat in protected):
             prot.append(path)
@@ -684,8 +704,11 @@ def allowed_bash_from_gates(cfg):
 
 def build_worker_cmd(claude, model, role, allowed_bash, max_turns):
     allowed = ["Read", "Edit", "Write", "Glob", "Grep"] + [f"Bash({b} *)" for b in allowed_bash]
+    # The project's settings.json allows git for the main session; a worker that commits or switches branches would
+    # hide its changes from the scope guard and the gates, so git is denied here (deny wins over allow).
     return [claude, "-p", "--model", model, "--max-turns", str(max_turns), "--permission-mode", "acceptEdits",
             "--tools", "Read,Edit,Write,Glob,Grep,Bash", "--allowedTools", ",".join(allowed),
+            "--disallowedTools", "Bash(git *),Bash(git)",
             "--strict-mcp-config", "--system-prompt", role]
 
 
@@ -756,6 +779,10 @@ def make_checker(root, cfg, allowed, gate_timeout_s):
         scope = scope_check(root, allowed, cfg["scope"]["protected"], cfg["scope"]["temp_patterns"], clean=True)
         changed = [p for f, p in changed_files(root) if not p.startswith("docs/tasks/logs/")]
         gates = run_gates(cfg["gates"]["fast"], root, gate_timeout_s) if changed else []
+        if gates_ok(gates) and changed and not scope["outside"] and not scope["protected"]:
+            # The full gate runs once the fast one passes, before Claude reviews; commands already run are skipped.
+            done = [g["cmd"] for g in gates]
+            gates += run_gates([c for c in cfg["gates"].get("full", []) if c not in done], root, gate_timeout_s)
         res["scope"], res["gates"] = scope, gates
         problems = []
         if scope["outside"]:
@@ -909,7 +936,6 @@ def main(argv=None):
     allowed = parse_scope(task_path)
     stem = base_task_path(task_path).stem
     branch = args.branch or f"task/{stem}"
-    base_branch = cfg["project"]["base_branch"]
     ladder = list(cfg["workers"]["ladder"])
     if args.start:
         if args.start not in ladder:
@@ -941,6 +967,12 @@ def main(argv=None):
         return EXIT_BUSY
     atexit.register(run_lock.release)
 
+    configured_base = cfg["project"].get("base_branch", "")
+    base_branch = resolve_base_branch(root, configured_base)
+    if base_branch is None:
+        print(f"error: base branch {configured_base!r} not found" if configured_base else
+              "error: no `main` or `master` branch; set [project] base_branch in .harness/harness.toml", file=sys.stderr)
+        return EXIT_CONFIG
     try:
         ensure_branch(root, branch, base_branch)
     except RuntimeError as e:

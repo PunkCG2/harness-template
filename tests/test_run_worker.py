@@ -103,6 +103,32 @@ class ScopeTests(unittest.TestCase):
             self.assertTrue(r2["unknown"])
             self.assertEqual(r2["outside"], [])
 
+    def test_template_temp_patterns_with_trailing_slash(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = make_repo(d)
+            (root / "scratch").mkdir()
+            (root / "scratch" / "a.js").write_text("x", encoding="utf-8")
+            (root / "scripts-tmp").mkdir()
+            (root / "scripts-tmp" / "b.mjs").write_text("x", encoding="utf-8")
+            r = rw.scope_check(root, ["src/a.js"], [], ["_tmp*", "*.tmp", "scratch/", "scripts-tmp/", "__pycache__/"])
+            self.assertEqual(sorted(r["removed"]), ["scratch/a.js", "scripts-tmp/b.mjs"])
+            self.assertEqual(r["outside"], [])
+
+    def test_new_meta_of_in_scope_files_is_allowed(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = make_repo(d)
+            (root / "Assets" / "Scripts" / "Player").mkdir(parents=True)
+            (root / "Assets" / "Old.cs.meta").write_text("guid: 1", encoding="utf-8")
+            sh(root, "git", "add", "-A")
+            sh(root, "git", "commit", "-q", "-m", "meta")
+            for rel in ("Assets/Scripts/Player/Move.cs", "Assets/Scripts/Player/Move.cs.meta", "Assets/Scripts/Player.meta",
+                        "Assets/Other.cs.meta"):
+                (root / rel).write_text("x", encoding="utf-8")
+            (root / "Assets" / "Old.cs.meta").write_text("guid: 2", encoding="utf-8")
+            r = rw.scope_check(root, ["Assets/Scripts/Player/Move.cs", "Assets/Old.cs"], ["**/*.meta"], [])
+            self.assertEqual(sorted(r["protected"]), ["Assets/Old.cs.meta", "Assets/Other.cs.meta"])
+            self.assertEqual(r["outside"], [])
+
     def test_glob_matching(self):
         self.assertTrue(rw.path_matches("data/raw/a/b.txt", "data/raw/**"))
         self.assertTrue(rw.path_matches("src/x.js", "src/*.js"))
@@ -307,6 +333,7 @@ class PromptTests(unittest.TestCase):
         cmd = rw.build_worker_cmd("claude", "m", "ROLE", ["npm"], 40)
         self.assertIn("Read,Edit,Write,Glob,Grep,Bash(npm *)", cmd)
         self.assertEqual(cmd[cmd.index("--system-prompt") + 1], "ROLE")
+        self.assertIn("Bash(git *)", cmd[cmd.index("--disallowedTools") + 1])
 
 
 class CheckerTests(unittest.TestCase):
@@ -329,6 +356,45 @@ class CheckerTests(unittest.TestCase):
             r2 = rw.make_checker(root, bad, ["src/a.js"], 30)(dict(res))
             self.assertFalse(r2["ok"])
             self.assertIn("failed", r2["details"])
+
+    def test_full_gates_run_after_fast_ones_pass(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = make_repo(d)
+            (root / "src" / "a.js").write_text("changed", encoding="utf-8")
+            res = {"flags": {"overflow": False}, "timed_out": False}
+            ok = 'python -c "print(1)"'
+            cfg = rw.deep_merge(rw.DEFAULTS, {"gates": {"fast": [ok], "full": [ok, 'python -c "print(2)"']}})
+            r = dict(res)
+            self.assertTrue(rw.make_checker(root, cfg, ["src/a.js"], 30)(r)["ok"])
+            self.assertEqual([g["cmd"] for g in r["gates"]], [ok, 'python -c "print(2)"'], "a fast command is not run twice")
+            bad = rw.deep_merge(rw.DEFAULTS, {"gates": {"fast": [ok], "full": ['python -c "import sys; sys.exit(3)"']}})
+            chk = rw.make_checker(root, bad, ["src/a.js"], 30)(dict(res))
+            self.assertFalse(chk["ok"])
+            self.assertEqual(chk["kind"], "gates")
+            failing_fast = rw.deep_merge(rw.DEFAULTS, {"gates": {"fast": ['python -c "import sys; sys.exit(1)"'],
+                                                                 "full": ['python -c "print(2)"']}})
+            r3 = dict(res)
+            rw.make_checker(root, failing_fast, ["src/a.js"], 30)(r3)
+            self.assertEqual(len(r3["gates"]), 1, "the full gate does not run when the fast one fails")
+
+
+class BaseBranchTests(unittest.TestCase):
+    def test_main_or_master_or_configured(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = make_repo(d)
+            self.assertEqual(rw.resolve_base_branch(root), "main")
+            sh(root, "git", "branch", "-m", "main", "master")
+            self.assertEqual(rw.resolve_base_branch(root), "master")
+            self.assertIsNone(rw.resolve_base_branch(root, "develop"))
+            sh(root, "git", "branch", "develop")
+            self.assertEqual(rw.resolve_base_branch(root, "develop"), "develop")
+
+    def test_ensure_branch_from_master(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = make_repo(d)
+            sh(root, "git", "branch", "-m", "main", "master")
+            rw.ensure_branch(root, "task/001-x", rw.resolve_base_branch(root))
+            self.assertEqual(rw.current_branch(root), "task/001-x")
 
 
 class ConfigTests(unittest.TestCase):

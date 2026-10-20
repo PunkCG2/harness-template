@@ -17,7 +17,7 @@ description: Interviews the author at the start of a project and writes CLAUDE.m
 3. After each area, summarise what you understood in two or three lines and let the author correct it.
 4. Write, in this order (show each result briefly, never dump long files):
    - `docs/spec.md` and `docs/design.md` (from the answers; keep `Open questions` honest);
-   - `.harness/harness.toml`: gates (fast / full), worker ladder, local server address, preferred and secondary local model (`model`, `fallback_model`), budget, `[scope] protected`, timings;
+   - `.harness/harness.toml`: `[project] base_branch` (detected with `git branch --show-current`, not asked), gates (fast / full), worker ladder, local server address, preferred and secondary local model (`model`, `fallback_model`), budget, `[scope] protected`, timings;
    - the three roles in `.harness/roles/` (3–6 lines each; implementer, reviewer, planner; `learning` mode adds the
      "explain why" lines);
    - `CLAUDE.md` (short: purpose, where things are, rules, notes rule, validation);

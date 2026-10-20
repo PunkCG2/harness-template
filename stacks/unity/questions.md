@@ -37,6 +37,7 @@ ScriptableObjects for data, C# events for communication, no singletons.
   - Scenes (`.unity`): the author, by hand in the Editor.
   - Prefabs (`.prefab`): never the local worker; the task starts at `claude-sonnet` (`--start claude-sonnet`) or runs in the main Claude session.
 - `[scope] protected`: `ProjectSettings/**`, `Packages/manifest.json`, `**/*.meta`, `**/*.unity`, `**/*.prefab`, `Library/**`, `Temp/**`.
+  The worker script still accepts the new `.meta` that Unity writes for an in-scope script or folder.
 - Scene wiring: scenes are the author's, so every task that adds a `[SerializeField]` lists the Inspector steps to do by
   hand (component, field, reference) under "how to test it".
 - Scene merges: configure `UnityYAMLMerge` as the git merge tool for `.unity` and `.prefab` (see `INIT.md`).

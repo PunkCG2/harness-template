@@ -3,6 +3,7 @@ import io
 import json
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -48,6 +49,9 @@ class InitTests(unittest.TestCase):
                     self.assertNotIn("{{", (p / "CLAUDE.md").read_text(encoding="utf-8"))
                     self.assertNotIn("{{", (p / ".harness/harness.toml").read_text(encoding="utf-8"))
                     self.assertIn(f'name = "{stack}"', (p / ".harness/harness.toml").read_text(encoding="utf-8"))
+                    cfg = tomllib.loads((p / ".harness/harness.toml").read_text(encoding="utf-8"))
+                    self.assertEqual(cfg["project"]["base_branch"], "")
+                    self.assertIn("full", cfg["gates"])
 
     def test_settings_merge_stack_permissions(self):
         code, _, err = run_init("--stack", "python", "--into", str(self.project))

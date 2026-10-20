@@ -190,9 +190,12 @@ attempt limit) → escalate → only when everything passes, return a **review b
 scope result, worker and rounds used.
 
 - **Scope guard**: compares changed files with the task's "Files in scope"; deletes obvious temporary files
-  (`_tmp*`, `*.tmp`, `scratch/`, debug scripts) and flags the rest.
-- **Gates**: two lists in `harness.toml`. `fast` (compile, quick tests) runs in the inner loop; `full` runs once
-  before Claude is called. If even `fast` does not fit the stack's timeout the script warns at start-up and suggests
+  (`_tmp*`, `*.tmp`, `scratch/`, debug scripts) and flags the rest. A new `.meta` file next to an in-scope file or
+  folder (Unity) is allowed; a modified one is checked like any other file.
+- **Gates**: two lists in `harness.toml`. `fast` (compile, quick tests) runs in the inner loop; `full` runs once the
+  fast gates pass, before Claude is called (commands already run by `fast` are skipped); a failure goes back to the worker.
+- **Git**: the worker may not run `git` (`--disallowedTools`); branches and commits are the script's and Claude's job.
+  Tasks start from `[project] base_branch` (empty = `main` or `master`, whichever exists). If even `fast` does not fit the stack's timeout the script warns at start-up and suggests
   splitting the tests.
 
 ### 8.5 Timeouts and calibration

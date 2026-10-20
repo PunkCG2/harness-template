@@ -7,7 +7,8 @@ description: Runs one task from docs/tasks/ through the worker ladder, the autom
 
 ## 1. Prepare
 - Read the task. If scope or criteria are missing or not checkable, complete them first.
-- `git status` must be clean and on the main branch; otherwise stop and say so. Pick `next` = first `pendiente`
+- `git status` must be clean and on the base branch (`[project] base_branch` in `.harness/harness.toml`; empty means
+  `main` or `master`, whichever exists); otherwise stop and say so. Pick `next` = first `pendiente`
   task whose dependencies are `hecha`, in milestone order.
 - Set `estado: en-curso`. Branch: `task/NNN-name`. Update `docs/progress/progress.md` (current task).
 
@@ -31,7 +32,8 @@ what is expected) and run the worker again on the same branch. Split the fix int
 overflowed. After round 3, fix small leftovers yourself or explain the blocker to the author.
 
 ## 5. Approve
-- `git switch main`, `git merge --squash task/NNN-name`, commit `NNN: <summary>`, delete the branch. If a dev server is running, touch the files that changed (`git diff --name-only HEAD~1 HEAD | xargs touch`) so it does not serve stale files after the branch switch.
+- `git switch <base branch>`, `git merge --squash task/NNN-name`, commit `NNN: <summary>`, delete the branch
+  (`git branch -D`: after a squash merge git does not see it as merged). If a dev server is running, touch the files that changed (`git diff --name-only HEAD~1 HEAD | xargs touch`) so it does not serve stale files after the branch switch.
 - Task: `estado: hecha`, `rondas: K`, one or two lines in review notes. Commit.
 - **Harness notes:** if the task needed escalation or more than one round, or anything about the harness itself was
   wrong, append an entry to `docs/harness-notes.md`.
