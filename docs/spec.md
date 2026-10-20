@@ -49,7 +49,7 @@ harness-template/
 │  │  ├─ questions/core.md      question bank for /kickoff
 │  │  └─ run_worker.py          unified worker script (phase 2, see §12)
 │  └─ docs/
-│     ├─ spec.md.tmpl  design.md.tmpl  harness-notes.md.tmpl
+│     ├─ spec.md.tmpl  design.md.tmpl  harness-notes.md.tmpl  guardrails.md.tmpl
 │     ├─ tasks/_template.md      (tasks born from `/qa` go in tasks/qa/, created on demand)
 │     └─ progress/progress.md.tmpl
 ├─ stacks/<stack>/              web (tested), unity, rust, dotnet, cpp, python (skeletons)
@@ -65,7 +65,7 @@ harness-template/
 
 Inside a project, files are either **managed** (replaceable by `/sync`: `.harness/run_worker.py`,
 `.harness/questions/`, the skills) or **owned** (never touched by the kit: `CLAUDE.md`, `docs/`, `harness.toml`,
-`.harness/roles/`).
+`.harness/roles/`, `docs/guardrails.md`).
 
 ## 4. Starting a project
 
@@ -223,6 +223,13 @@ Calibration is automatic:
   line and commits with `Source: <project>#<note>`. The author pushes. The project's note is marked harvested.
 - **`/sync`**, run in a project: compares the managed files with the template and applies only those.
 - A reminder (never automatic action) appears when 5 or more notes are un-harvested.
+- **Guardrails** (`docs/guardrails.md`, owned by the project). *Enforced* section: pointers to what the tools already
+  enforce (`[scope] protected`, scope guard, gates, permissions). *Signs* section: one line per rule learned from a
+  failure, `When <situation>: <rule>. Evidence: <...>`, at most 20. `run_worker.py` appends the signs to the worker's
+  system prompt; `/task` review checks them. After a correction round, an escalation or a `/qa` defect Claude proposes a
+  sign and the author approves it; no evidence, no sign. The file is advice, not a security boundary: anything that
+  must hold goes in a gate or `protected`. `/harvest` offers signs that help other projects. Idea from Google's
+  Harness2 (editable `guardrails.md`, evidence-backed lessons, enforcement outside the editable harness).
 
 ## 10. Stacks
 

@@ -11,6 +11,8 @@ description: Run from the harness-template folder. Moves lessons from a project'
 3. For each promoted entry edit the template: `docs/lessons.md` (new row with the next id), the right question in
    `core/.harness/questions/core.md` or `stacks/<stack>/questions.md`, a rule in `stacks/<stack>/CLAUDE.part.md`, a
    default in `stack.toml`, or the script/skills when the lesson is about them.
+   Also read the `Signs` of `<project>/docs/guardrails.md`: a sign that would help other projects is offered the same
+   way (core `lessons.md`, a stack's `CLAUDE.part.md` rule, or a gate). Signs stay in the project unless promoted.
 4. Add a line per entry to `CHANGELOG.md` and commit locally with a trailer
    `Source: <project>#<note title>`. **Never push** (the author pushes).
 5. In the project's notes mark each handled entry `harvested <commit>` (or `discarded`) and say what was left to do.

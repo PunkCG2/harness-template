@@ -76,6 +76,12 @@ The question banks live in [`core/.harness/questions/core.md`](core/.harness/que
 | `/sync` | updates the managed files of a project from the template |
 | `/harvest <project>` | (from this folder) moves lessons from a project's `docs/harness-notes.md` into the template |
 
+## Guardrails
+
+Each project gets `docs/guardrails.md`: pointers to what the tools already enforce (protected paths, scope guard, gates)
+and a short list of **signs**, rules learned from real failures, each with its evidence. The worker receives the signs
+with every task. Claude proposes a sign after a correction round, an escalation or a `/qa` defect; you approve it.
+
 ## Layout
 
 See [`docs/spec.md`](docs/spec.md) §3. Lessons already learned are in [`docs/lessons.md`](docs/lessons.md); changes are

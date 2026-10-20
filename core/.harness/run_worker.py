@@ -818,6 +818,27 @@ def read_role(root):
             "no temporary files. Run the project checks before finishing. Final answer: at most 10 lines.")
 
 
+MAX_SIGNS = 20
+
+
+def read_signs(root):
+    """Bullets under '## Signs' in docs/guardrails.md (comments removed). Missing file or section -> []."""
+    p = Path(root) / "docs" / "guardrails.md"
+    if not p.exists():
+        return []
+    text = re.sub(r"<!--.*?-->", "", p.read_text(encoding="utf-8"), flags=re.S)
+    section = re.search(r"^##\s+Signs\s*$(.*?)(?=^##\s|\Z)", text, flags=re.S | re.M)
+    if not section:
+        return []
+    return [l.strip() for l in section.group(1).splitlines() if l.strip().startswith(("- ", "* "))]
+
+
+def role_with_signs(role, signs):
+    if not signs:
+        return role
+    return role + "\n\n## Project guardrails (learned from earlier failures; obey them)\n" + "\n".join(signs)
+
+
 def state_dir(root):
     return Path(root) / ".harness" / "state"
 
@@ -900,11 +921,15 @@ def main(argv=None):
     lim = timing_limits(cfg)
     worker_s = timings.timeout_s("worker", *lim["worker"])
     gate_s = timings.timeout_s("gate", *lim["gate"])
-    role = read_role(root)
+    signs = read_signs(root)
+    role = role_with_signs(read_role(root), signs)
 
     print(f"task {task_path.name} | branch {branch} | ladder {' > '.join(ladder)}")
     print(f"scope: {', '.join(allowed) if allowed else '(unknown)'} | fast gates: {cfg['gates']['fast'] or '(none)'}")
     print(f"timeouts: worker {worker_s:.0f} s per attempt, gates {gate_s:.0f} s per pass")
+    if signs:
+        print(f"guardrails: {len(signs)} sign(s) added to the worker prompt"
+              + (f" - more than {MAX_SIGNS}: merge or retire some in docs/guardrails.md" if len(signs) > MAX_SIGNS else ""))
     if args.dry_run:
         return EXIT_OK
 

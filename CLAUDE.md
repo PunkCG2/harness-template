@@ -4,8 +4,8 @@ Reusable starter kit for AI-assisted development with a local-first worker. Read
 `docs/lessons.md` before changing anything.
 
 ## State (handoff)
-- Phases 1 and 2 are done: spec, lessons (L-001..L-033), `init.py`, core templates, six stack skeletons (web tested), the
-  unified worker `core/.harness/run_worker.py` (58 tests in `tests/`) and the skills kickoff, plan, task, qa, resume, sync
+- Phases 1 and 2 are done: spec, lessons (L-001..L-035), `init.py`, core templates, six stack skeletons (web tested), the
+  unified worker `core/.harness/run_worker.py` (62 tests in `tests/`) and the skills kickoff, plan, task, qa, resume, sync
   (+ harvest at the repo root).
 - First project that used it: `bench-site` (`E:\IA\bench-site`, a Vite site). Its `docs/harness-notes.md` has been harvested up to the
   commit that introduced this handoff; its `harness.toml` carries `[template] version` and `[sync] skip = [".claude/skills"]`

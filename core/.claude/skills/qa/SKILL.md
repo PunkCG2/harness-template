@@ -22,4 +22,6 @@ Input: what the author saw while testing (free text, screenshots), usually when 
 5. **Approval.** Show the table (id, item, severity, task, executor) and **wait for the go-ahead**. Run nothing from here.
 6. **After.** With the go-ahead, run `/task` on each. When they finish, ask the author to re-check by eye. The milestone is
    not closed while `docs/tasks/qa/qa-<milestone>.md` has open items.
-7. If an item exposes a harness or stack flaw (not a project flaw), add an entry to `docs/harness-notes.md`.
+7. For each **defect** that a short rule would have prevented, propose a sign for `docs/guardrails.md` (format in that
+   file; needs evidence, the author approves before it is added).
+8. If an item exposes a harness or stack flaw (not a project flaw), add an entry to `docs/harness-notes.md`.

@@ -41,7 +41,8 @@ class InitTests(unittest.TestCase):
                     for rel in ("CLAUDE.md", ".harness/harness.toml", ".harness/INIT.md", ".harness/questions/core.md",
                                 ".harness/questions/stack.md", ".harness/roles/implementer.md", ".claude/settings.json",
                                 ".claude/skills/task/SKILL.md", ".claude/skills/resume/SKILL.md",
-                                "docs/progress/progress.md", "docs/harness-notes.md", "docs/tasks/_template.md", ".gitignore"):
+                                "docs/progress/progress.md", "docs/harness-notes.md", "docs/guardrails.md",
+                                "docs/tasks/_template.md", ".gitignore"):
                         self.assertTrue((p / rel).exists(), rel)
                     self.assertFalse(list(p.rglob("*.tmpl")), "no .tmpl files must be left")
                     self.assertNotIn("{{", (p / "CLAUDE.md").read_text(encoding="utf-8"))

@@ -22,7 +22,7 @@ branch and run the gates yourself.
 
 ## 3. Review (cheap)
 - Read the brief first; read the full diff only where gates cannot see (scope, quality, unautomated criteria).
-- Run `git status`: no stray files. Check every acceptance criterion.
+- Run `git status`: no stray files. Check every acceptance criterion and every sign in `docs/guardrails.md`.
 - If the worker hit `max turns` or errored, judge by the files and the gates, not by the exit status.
 
 ## 4. Correct (max 3 rounds)
@@ -35,6 +35,11 @@ overflowed. After round 3, fix small leftovers yourself or explain the blocker t
 - Task: `estado: hecha`, `rondas: K`, one or two lines in review notes. Commit.
 - **Harness notes:** if the task needed escalation or more than one round, or anything about the harness itself was
   wrong, append an entry to `docs/harness-notes.md`.
+- **Guardrail sign:** if a correction round, an escalation or a repeatable defect had a cause a short rule would have
+  prevented, propose ONE sign to the author in the form `- When <situation>: <rule>. Evidence: <task file, gate output
+  or test>`. Add it to the `Signs` section of `docs/guardrails.md` only after the author approves. No evidence, no sign.
+  Do not add a sign that duplicates a gate or `[scope] protected`; if a gate can enforce it, propose that instead. If
+  the file already has 20 signs, propose merging or retiring one first.
 - Update `docs/progress/progress.md`.
 
 ## 6. Milestone stop

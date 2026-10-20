@@ -622,6 +622,36 @@ class LockTests(unittest.TestCase):
             self.assertFalse(path.exists())
 
 
+class GuardrailTests(unittest.TestCase):
+    def write(self, root, text):
+        (Path(root) / "docs").mkdir(exist_ok=True)
+        (Path(root) / "docs" / "guardrails.md").write_text(text, encoding="utf-8")
+
+    def test_missing_file_or_section_gives_no_signs(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(rw.read_signs(d), [])
+            self.write(d, "# G\n\n## Enforced\n- gates\n")
+            self.assertEqual(rw.read_signs(d), [])
+
+    def test_template_without_signs_is_empty(self):
+        text = (ROOT / "core" / "docs" / "guardrails.md.tmpl").read_text(encoding="utf-8")
+        with tempfile.TemporaryDirectory() as d:
+            self.write(d, text.replace("{{project_name}}", "p"))
+            self.assertEqual(rw.read_signs(d), [])
+
+    def test_reads_only_bullets_of_the_signs_section(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.write(d, "## Enforced\n- not a sign\n\n## Signs\n<!-- - hidden -->\n"
+                          "- When A: do B. Evidence: t1\nplain text\n* When C: do D. Evidence: t2\n\n## Later\n- other\n")
+            self.assertEqual(rw.read_signs(d), ["- When A: do B. Evidence: t1", "* When C: do D. Evidence: t2"])
+
+    def test_role_with_signs(self):
+        self.assertEqual(rw.role_with_signs("ROLE", []), "ROLE")
+        out = rw.role_with_signs("ROLE", ["- When A: B."])
+        self.assertTrue(out.startswith("ROLE\n\n## Project guardrails"))
+        self.assertTrue(out.endswith("- When A: B."))
+
+
 class MainTests(unittest.TestCase):
     def test_dry_run_and_missing_task(self):
         with tempfile.TemporaryDirectory() as d:

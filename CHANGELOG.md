@@ -30,3 +30,4 @@
 - Added a root `.gitignore` (Python caches, local Claude Code files, harness state, scratch, OS/editor files) and untracked `__pycache__`.
 - Added `.gitattributes` (LF in the repository, CRLF only for Windows scripts) to stop the line-ending warnings.
 - Spec §13 and handoff: noted Claude Code Projects as a future idea, to revisit when it can run in a local environment.
+- Added `docs/guardrails.md` (project-owned): *Enforced* pointers plus evidence-backed *Signs*. `run_worker.py` appends the signs to the worker prompt (`read_signs`, `role_with_signs`); `/task`, `/qa` propose signs for author approval; `/harvest` reads them; `/sync` leaves the file alone. Idea from Google's Harness² (L-035).

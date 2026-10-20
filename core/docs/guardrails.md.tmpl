@@ -1,0 +1,17 @@
+# Guardrails ({{project_name}})
+
+<!-- Owned by the project; /sync never touches it. Only the "Signs" section is sent to the local worker with every
+     request, so keep it short (20 signs at most). This file is advice: a rule that must never be broken belongs in
+     a gate or in [scope] protected of .harness/harness.toml, and is only pointed to here. -->
+
+## Enforced (not advice)
+- Protected and generated paths: `[scope] protected` in `.harness/harness.toml`. The worker script rejects edits to them.
+- Files outside a task's "Files in scope": rejected by the scope guard.
+- Fast and full gates: `[gates]` in `.harness/harness.toml`. A failing gate sends the task back to the worker.
+- Tools the worker may run: derived from the gate commands; the rest of the permissions are in `.claude/settings.json`.
+
+## Signs
+<!-- One bullet per rule, written when something went wrong and a rule would have prevented it:
+     - When <situation>: <rule>. Evidence: <task file, gate output or test that showed the problem>
+     Claude proposes a sign after a review round, an escalation or a /qa defect; the author approves it before it
+     is added. No evidence, no sign. Merge or delete signs that stop mattering, or turn them into a test or a gate. -->
