@@ -5,7 +5,7 @@ description: Reports where the project stopped and continues from there. Use whe
 
 # Resume
 
-1. Read `docs/progress/progress.md`, the task files' `estado` (in `docs/tasks/` and `docs/tasks/qa/`), `git status`, `git branch` and `.harness/harness.toml`.
+1. Read `docs/progress/progress.md`, the task files' `status` (in `docs/tasks/` and `docs/tasks/qa/`), `git status`, `git branch` and `.harness/harness.toml`.
 2. Report in a few lines (no long dumps):
    - last finished milestone and whether the author already tested it;
    - the current milestone: done and pending tasks;

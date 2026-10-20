@@ -28,10 +28,10 @@ Detect first: `GET <url>/api/v0/models` lists the installed models and which one
 - Is a local server running (LM Studio, Bionic…) and on which port? Write it as `127.0.0.1:<port>`, not `localhost`. (L-026)
 - From the installed models, which is the **preferred** one (the worker loads it whenever nothing is loaded)? Propose one from the list. (L-027)
 - Which is the **secondary** one, used if the preferred cannot be loaded (for example not enough memory)? Optional. If another model is already loaded the worker uses it. (L-027)
-- Which context length and output-token cap should the preferred model run with? Propose the model's own values.
 
 Fixed, not asked: the ladder is 2 local attempts without thinking, 1 with thinking, then Claude Haiku, Claude Sonnet and
-the main Claude session (L-024, L-025). Claude usage has no budget limit. Git workflow (branches, commits per task) is
+the main Claude session (L-024, L-025). The context length is the server's load setting and the output cap stays at the
+template's `max_output_tokens` (L-003). Claude usage has no budget limit. Git workflow (branches, commits per task) is
 proposed by Claude from the project, not asked.
 
 ## 4. Gates

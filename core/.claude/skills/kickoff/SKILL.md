@@ -22,6 +22,7 @@ description: Interviews the author at the start of a project and writes CLAUDE.m
      "explain why" lines);
    - `CLAUDE.md` (short: purpose, where things are, rules, notes rule, validation);
    - the author's own check steps into `docs/progress/progress.md` (how they test by hand).
-5. Run the **fast gate once** on the empty project to record a first timing; if the project is empty, mark the
-   calibration as provisional in `harness.toml`.
+5. If the fast gate can already run, calibrate it: `python .harness/run_worker.py --calibrate` (it measures each command
+   cold and warm and sets the gate timeout). If the project is still empty, skip it: the table values stay and the
+   recorded timings adjust them during the first tasks.
 6. Tell the author to review the files and run `/plan`. Do not plan or implement anything from this skill.

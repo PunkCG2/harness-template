@@ -2,6 +2,7 @@
 
 Each lesson comes from a real project and states where it applies. New ones arrive through `/harvest`.
 Source `bench-site` = the first project that used this harness (a Vite + vanilla JS static site, 27 tasks).
+L-023 was never assigned; ids are not reused.
 
 | id | applies to | lesson | remedy |
 |---|---|---|---|

@@ -1,10 +1,10 @@
 ---
 id: NNN
-estado: pendiente        # pendiente | en-curso | hecha | bloqueada   (state: pending | in progress | done | blocked)
-ejecuta: local           # local | claude-haiku | claude-sonnet | claude   (who runs it first; the ladder escalates)
-depende: []              # ids of tasks that must be done first
-hito: M1                 # milestone this task belongs to
-rondas: 0                # filled by Claude on approval
+status: pending          # pending | in-progress | done | blocked
+runner: local            # local | claude-haiku | claude-sonnet | claude   (who runs it first; the ladder escalates)
+depends: []              # ids of tasks that must be done first
+milestone: M1            # milestone this task belongs to
+rounds: 0                # filled by Claude on approval
 ---
 # Short imperative title
 

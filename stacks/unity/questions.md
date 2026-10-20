@@ -35,7 +35,7 @@ ScriptableObjects for data, C# events for communication, no singletons.
 - Who edits what:
   - Worker (local models): C# scripts and token-expensive tasks.
   - Scenes (`.unity`): the author, by hand in the Editor.
-  - Prefabs (`.prefab`): never the local worker; the task starts at `claude-sonnet` (`--start claude-sonnet`) or runs in the main Claude session.
+  - Prefabs (`.prefab`): never the local worker; the task gets `runner: claude-sonnet` (the worker starts with `--start claude-sonnet`) or `runner: claude` (main session).
 - `[scope] protected`: `ProjectSettings/**`, `Packages/manifest.json`, `**/*.meta`, `**/*.unity`, `**/*.prefab`, `Library/**`, `Temp/**`.
   The worker script still accepts the new `.meta` that Unity writes for an in-scope script or folder.
 - Scene wiring: scenes are the author's, so every task that adds a `[SerializeField]` lists the Inspector steps to do by

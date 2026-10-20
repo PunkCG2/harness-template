@@ -5,7 +5,8 @@ description: Compares a project's managed harness files with the template and ap
 
 # Sync (run in a project)
 
-Managed files (safe to replace): `.harness/run_worker.py`, `.harness/questions/`, `.claude/skills/`.
+Managed files (safe to replace): `.harness/run_worker.py`, `.harness/questions/`, `.harness/INIT.md` (from the stack's
+`INIT.md`), `.claude/skills/`.
 Paths listed in `[sync] skip` of `.harness/harness.toml` are never replaced (for example skills a project translated).
 Owned files (never touch): `CLAUDE.md`, `docs/`, `.harness/harness.toml`, `.harness/roles/`, `.claude/settings.json`. `docs/guardrails.md` is the project's own record of failures; for a project
 that predates it, only suggest copying the template.

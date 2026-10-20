@@ -18,7 +18,8 @@ What it does for one task:
   4. when everything passes: commits on the task branch and prints a REVIEW BRIEF for Claude.
 
 Exit codes: 0 delivered | 2 local server unreachable | 3 a model must be chosen (list printed) |
-            4 ladder exhausted (the main Claude session takes over) | 5 usage or configuration error.
+            4 ladder exhausted (the main Claude session takes over) | 5 usage or configuration error |
+            6 another worker run is active in this project.
 """
 import argparse
 import atexit
@@ -694,16 +695,18 @@ def claude_exe():
 
 
 def allowed_bash_from_gates(cfg):
-    firsts = []
+    """The gate commands themselves (not their first word: `npm` would also allow `npm install`)."""
+    cmds = []
     for cmd in cfg["gates"].get("fast", []) + cfg["gates"].get("full", []):
-        word = cmd.split()[0] if cmd.split() else ""
-        if word and word not in firsts:
-            firsts.append(word)
-    return firsts
+        cmd = cmd.strip()
+        if cmd and cmd not in cmds:
+            cmds.append(cmd)
+    return cmds
 
 
 def build_worker_cmd(claude, model, role, allowed_bash, max_turns):
-    allowed = ["Read", "Edit", "Write", "Glob", "Grep"] + [f"Bash({b} *)" for b in allowed_bash]
+    # Each gate command may run as written or with extra arguments (a single test file, a filter).
+    allowed = ["Read", "Edit", "Write", "Glob", "Grep"] + [r for b in allowed_bash for r in (f"Bash({b})", f"Bash({b} *)")]
     # The project's settings.json allows git for the main session; a worker that commits or switches branches would
     # hide its changes from the scope guard and the gates, so git is denied here (deny wins over allow).
     return [claude, "-p", "--model", model, "--max-turns", str(max_turns), "--permission-mode", "acceptEdits",
@@ -849,15 +852,29 @@ MAX_SIGNS = 20
 
 
 def read_signs(root):
-    """Bullets under '## Signs' in docs/guardrails.md (comments removed). Missing file or section -> []."""
+    """Bullets under the '## Signs' heading of docs/guardrails.md (the heading may carry a suffix such as '(max 20)').
+    Comments and fenced code blocks are ignored; an indented line continues the bullet above. Missing file or section -> []."""
     p = Path(root) / "docs" / "guardrails.md"
     if not p.exists():
         return []
-    text = re.sub(r"<!--.*?-->", "", p.read_text(encoding="utf-8"), flags=re.S)
-    section = re.search(r"^##\s+Signs\s*$(.*?)(?=^##\s|\Z)", text, flags=re.S | re.M)
-    if not section:
-        return []
-    return [l.strip() for l in section.group(1).splitlines() if l.strip().startswith(("- ", "* "))]
+    text = re.sub(r"<!--.*?-->", "", p.read_text(encoding="utf-8-sig"), flags=re.S)
+    signs, inside, fence = [], False, False
+    for line in text.splitlines():
+        if line.lstrip().startswith(("```", "~~~")):
+            fence = not fence
+            continue
+        if fence:
+            continue
+        if re.match(r"^##\s", line):
+            inside = bool(re.match(r"^##\s+Signs\b", line))
+            continue
+        if not inside or not line.strip():
+            continue
+        if line.startswith(("- ", "* ")):
+            signs.append(line.strip())
+        elif line[:1] in (" ", "\t") and signs:
+            signs[-1] += " " + line.strip()
+    return signs
 
 
 def role_with_signs(role, signs):
@@ -886,20 +903,25 @@ def cmd_calibrate(root, cfg, accept):
     if not fast:
         print("no fast gates configured in .harness/harness.toml [gates]", file=sys.stderr)
         return EXIT_CONFIG
+    # The gate timeout applies to each command, so each command is measured on its own (cold, then warm).
     lim = timing_limits(cfg)["gate"]
-    cold = sum(g["seconds"] for g in run_gates(fast, root, lim[2]))
-    warm = sum(g["seconds"] for g in run_gates(fast, root, lim[2]))
-    print(f"fast gates: cold {cold:.1f} s, warm {warm:.1f} s (table: {lim[0] / 60:.0f} min)")
-    if max(cold, warm) > 5 * lim[0] and not accept:
+    cold = run_gates(fast, root, lim[2])
+    warm = run_gates(fast, root, lim[2])
+    for c, w in zip(cold, warm + [None] * len(cold)):
+        print(f"`{c['cmd']}`: cold {c['seconds']:.1f} s" + (f", warm {w['seconds']:.1f} s" if w else "")
+              + ("" if c["ok"] else " (FAILED)"))
+    slowest = max(g["seconds"] for g in cold + warm)
+    print(f"slowest command {slowest:.1f} s (table: {lim[0] / 60:.0f} min)")
+    if slowest > 5 * lim[0] and not accept:
         print("This is more than 5x the table value. Check it is expected, then run again with --accept-calibration.")
         return EXIT_CONFIG
     timings = Timings(state_dir(root) / "timings.json")
-    timings.record("gate", cold)
-    timings.record("gate", warm)
-    limit = clamp(3 * max(cold, warm), lim[1], lim[2])
+    for g in cold + warm:
+        timings.record("gate", g["seconds"])
+    limit = clamp(3 * slowest, lim[1], lim[2])
     timings.data["limits"]["gate"] = round(limit, 1)
     timings.save()
-    print(f"gate timeout set to {limit:.0f} s")
+    print(f"gate timeout set to {limit:.0f} s per command")
     return EXIT_OK
 
 
@@ -952,7 +974,7 @@ def main(argv=None):
 
     print(f"task {task_path.name} | branch {branch} | ladder {' > '.join(ladder)}")
     print(f"scope: {', '.join(allowed) if allowed else '(unknown)'} | fast gates: {cfg['gates']['fast'] or '(none)'}")
-    print(f"timeouts: worker {worker_s:.0f} s per attempt, gates {gate_s:.0f} s per pass")
+    print(f"timeouts: worker {worker_s:.0f} s per attempt, gates {gate_s:.0f} s per command")
     if signs:
         print(f"guardrails: {len(signs)} sign(s) added to the worker prompt"
               + (f" - more than {MAX_SIGNS}: merge or retire some in docs/guardrails.md" if len(signs) > MAX_SIGNS else ""))

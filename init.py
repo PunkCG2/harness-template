@@ -17,6 +17,7 @@ import datetime
 import json
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 try:
@@ -120,10 +121,8 @@ def main(argv=None):
     stacks = list_stacks()
     if args.list:
         for name in stacks:
-            status = "skeleton"
-            for line in read(STACKS / name / "stack.toml").splitlines():
-                if line.strip().startswith("status"):
-                    status = line.split("=", 1)[1].strip().strip('"')
+            with open(STACKS / name / "stack.toml", "rb") as fh:
+                status = tomllib.load(fh).get("stack", {}).get("status", "skeleton")
             print(f"{name:8} {status}")
         return 0
     if not args.stack or not args.into:

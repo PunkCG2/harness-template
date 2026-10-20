@@ -105,6 +105,8 @@ class InitTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("web", out)
         self.assertIn("tested", out)
+        self.assertNotIn("#", out, "inline TOML comments must not leak into the list")
+        self.assertNotIn('"', out)
 
 
 if __name__ == "__main__":

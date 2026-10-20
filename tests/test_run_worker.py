@@ -1,5 +1,7 @@
+import contextlib
 import http.server
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -36,8 +38,8 @@ def make_repo(tmp):
 
 TASK = """---
 id: 001
-estado: pendiente        # pendiente
-ejecuta: local
+status: pending          # pending | in-progress
+runner: local
 ---
 # Title
 
@@ -56,7 +58,7 @@ class TaskTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "001-x.md"
             p.write_text(TASK, encoding="utf-8")
-            self.assertEqual(rw.parse_task(p)["front"]["estado"], "pendiente")
+            self.assertEqual(rw.parse_task(p)["front"]["status"], "pending")
             self.assertEqual(rw.parse_scope(p), ["src/a.js", "src/new.js", "tests/"])
             fix = Path(d) / "001-x.fix-2.md"
             fix.write_text("# fix", encoding="utf-8")
@@ -268,6 +270,16 @@ class TimingTests(unittest.TestCase):
             t.save()
             self.assertTrue((Path(d) / "s" / "timings.json").exists())
 
+    def test_calibrate_measures_each_command(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = make_repo(d)
+            cfg = rw.deep_merge(rw.DEFAULTS, {"gates": {"fast": ['python -c "print(1)"', 'python -c "print(2)"']}})
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(rw.cmd_calibrate(root, cfg, False), rw.EXIT_OK)
+            data = json.loads((root / ".harness" / "state" / "timings.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(data["samples"]["gate"]), 4, "two commands, cold and warm")
+            self.assertEqual(data["limits"]["gate"], 60.0, "3 x a fast command is clamped to the 1-minute floor")
+
 
 class LadderTests(unittest.TestCase):
     def run_with(self, script, local_attempts=3):
@@ -329,9 +341,10 @@ class PromptTests(unittest.TestCase):
 
     def test_worker_command_and_allowed_bash(self):
         cfg = rw.deep_merge(rw.DEFAULTS, {"gates": {"fast": ["npm test"], "full": ["npm test", "npm run build", "cargo test"]}})
-        self.assertEqual(rw.allowed_bash_from_gates(cfg), ["npm", "cargo"])
-        cmd = rw.build_worker_cmd("claude", "m", "ROLE", ["npm"], 40)
-        self.assertIn("Read,Edit,Write,Glob,Grep,Bash(npm *)", cmd)
+        self.assertEqual(rw.allowed_bash_from_gates(cfg), ["npm test", "npm run build", "cargo test"])
+        cmd = rw.build_worker_cmd("claude", "m", "ROLE", ["npm test"], 40)
+        self.assertIn("Read,Edit,Write,Glob,Grep,Bash(npm test),Bash(npm test *)", cmd)
+        self.assertNotIn("Bash(npm *)", cmd[cmd.index("--allowedTools") + 1])
         self.assertEqual(cmd[cmd.index("--system-prompt") + 1], "ROLE")
         self.assertIn("Bash(git *)", cmd[cmd.index("--disallowedTools") + 1])
 
@@ -710,6 +723,24 @@ class GuardrailTests(unittest.TestCase):
             self.write(d, "## Enforced\n- not a sign\n\n## Signs\n<!-- - hidden -->\n"
                           "- When A: do B. Evidence: t1\nplain text\n* When C: do D. Evidence: t2\n\n## Later\n- other\n")
             self.assertEqual(rw.read_signs(d), ["- When A: do B. Evidence: t1", "* When C: do D. Evidence: t2"])
+
+    def test_heading_suffix_crlf_bom_fences_and_continuations(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "docs").mkdir()
+            text = ("﻿# G\r\n## Signs (max 20)\r\n- When A: do B.\r\n  Evidence: t1\r\n```\r\n## not a heading\r\n"
+                    "- fenced bullet\r\n```\r\n- When C: do D. Evidence: t2\r\n## Signsx\r\n- not a sign\r\n")
+            (Path(d) / "docs" / "guardrails.md").write_bytes(text.encode("utf-8"))
+            self.assertEqual(rw.read_signs(d), ["- When A: do B. Evidence: t1", "- When C: do D. Evidence: t2"])
+
+    def test_dry_run_reports_the_signs(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = make_repo(d)
+            (root / "docs" / "tasks" / "001-x.md").write_text(TASK, encoding="utf-8")
+            self.write(root, "## Signs\n- When A: do B. Evidence: t1\n")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(rw.main(["docs/tasks/001-x.md", "--root", str(root), "--dry-run"]), rw.EXIT_OK)
+            self.assertIn("guardrails: 1 sign(s) added to the worker prompt", out.getvalue())
 
     def test_role_with_signs(self):
         self.assertEqual(rw.role_with_signs("ROLE", []), "ROLE")

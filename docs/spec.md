@@ -1,7 +1,7 @@
 # AI Dev Harness — Specification
 
-Status: **draft for review** (2026-10-15). Design agreed in conversation with the author while building the
-`bench-site` project. Nothing here is final until the author approves it.
+Status: **approved design, phases 1 and 2 implemented** (last reviewed 2026-10-20). Design agreed in conversation with
+the author while building the `bench-site` project; changes go through the author.
 
 ## 1. Purpose
 
@@ -58,13 +58,13 @@ harness-template/
 │  ├─ gitignore.part            lines for the project's .gitignore
 │  ├─ CLAUDE.part.md            stack-specific rules inserted into CLAUDE.md
 │  ├─ questions.md              stack questions for /kickoff
-│  └─ INIT.md                   ≤ 25 lines: how to start a project of this stack, and how to verify it
-├─ docs/{spec.md,lessons.md}
-└─ tests/                       tests for init.py
+│  └─ INIT.md                   install guide: prerequisites, steps, what init.py does, how to verify
+├─ docs/{spec.md,lessons.md,review-brief.md}
+└─ tests/                       tests for init.py and run_worker.py
 ```
 
 Inside a project, files are either **managed** (replaceable by `/sync`: `.harness/run_worker.py`,
-`.harness/questions/`, the skills) or **owned** (never touched by the kit: `CLAUDE.md`, `docs/`, `harness.toml`,
+`.harness/questions/`, `.harness/INIT.md`, the skills) or **owned** (never touched by the kit: `CLAUDE.md`, `docs/`, `harness.toml`,
 `.harness/roles/`, `docs/guardrails.md`).
 
 ## 4. Starting a project
@@ -82,20 +82,22 @@ Inside a project, files are either **managed** (replaceable by `/sync`: `.harnes
 
 Reads `.harness/questions/core.md` and `stacks/<stack>/questions.md` (copied into the project at init), asks one
 focused question at a time, then writes `CLAUDE.md` (short), `docs/spec.md`, `docs/design.md`, `.harness/harness.toml`
-(gates, ladder, budgets) and the three roles. Core question areas:
+(gates, models, budget, base branch) and the three roles. It **detects before asking** (repository, installed tools,
+`GET /api/v0/models`) and only asks to confirm. Order: core 1-2, the stack questions, core 3-8 (L-034):
 
-1. Purpose and audience; how "done" is recognised.
-2. Constraints: hosting, deadlines, language, accessibility and motion policy.
-3. Workers and machine: local models available, context length and output cap, GPU memory, which Claude models and
-   subscription are available.
-4. Gates: fast and full check commands, how long they take, whether a browser is installed for visual checks.
-5. Scope and protected data: generated files never edited by hand, untouchable folders.
-6. Task budget: files per task and spec length, calibrated to the worker.
-7. Numbers and code rules: values never typed by hand, conventions, allowed dependencies.
-8. Human verification: what the author tests by eye and how (editor, browser, console).
-9. Project mode: `production` or `learning`.
+1. Purpose and audience: what and for whom, how "done" is recognised, the free-text "feel", first milestone scope,
+   project mode (`production` or `learning`).
+2. Constraints: where it runs, deadline, product and comment language, accessibility.
+3. Workers: local server port, preferred and secondary local model (from the detected list).
+4. Gates: fast and full commands (run once to time them), visual-check tool, formatter and line endings.
+5. Scope and protected data: generated files, untouchable folders, tool output to git-ignore.
+6. Task budget: 3 files and ~15 spec lines unless the author wants other limits.
+7. Code rules: conventions, allowed dependencies, architecture.
+8. Human verification: what the author tests by eye and how; it becomes each milestone's "how to test it".
 
-Every question exists because of a real problem (see `docs/lessons.md`); new ones arrive through `/harvest`.
+Fixed, not asked: the worker ladder (§8.3), no Claude budget limit, the git workflow (proposed by Claude) and the base
+branch (detected). Every question exists because of a real problem (see `docs/lessons.md`); new ones arrive through
+`/harvest`.
 
 ## 6. Roles
 
@@ -171,9 +173,11 @@ exit code 6).
 
 ### 8.3 Ladder and attempts
 
-Configured per project, for example `local → claude-haiku → claude-sonnet → main Claude`.
+Fixed in the template (not asked at `/kickoff`): `local → claude-haiku → claude-sonnet → main Claude`. The values live
+in `harness.toml` and a project may still edit them by hand.
 
-- `local`: **3 attempts** before escalating (the author wants development to stay local); Claude workers 1–2.
+- `local`: **3 attempts** before escalating (the author wants development to stay local); Haiku 2, Sonnet 1.
+- `--start <tier>` skips the cheaper tiers for a task known to be heavy (the task's `runner` field, §7).
 - An *attempt* is the first try or a correction round. After an overflow or no output the retry does **not** repeat
   the same prompt; it adds: one file per write call, compact code, no explanations, no temporary files. After failed
   gates the retry includes the failure output and the files outside scope.
@@ -195,25 +199,24 @@ scope result, worker and rounds used.
 - **Gates**: two lists in `harness.toml`. `fast` (compile, quick tests) runs in the inner loop; `full` runs once the
   fast gates pass, before Claude is called (commands already run by `fast` are skipped); a failure goes back to the worker.
 - **Git**: the worker may not run `git` (`--disallowedTools`); branches and commits are the script's and Claude's job.
-  Tasks start from `[project] base_branch` (empty = `main` or `master`, whichever exists). If even `fast` does not fit the stack's timeout the script warns at start-up and suggests
-  splitting the tests.
+  Tasks start from `[project] base_branch` (empty = `main` or `master`, whichever exists).
 
 ### 8.5 Timeouts and calibration
 
-Maximum time per attempt = **worker time** (from the model's measured speed, per model) + **two gate passes**.
+Each worker attempt has a **worker timeout**; each gate command has its own **gate timeout** (per command, not per pass).
 
-Initial table (minutes, worker / one gate pass): web 10/5 (measured), rust 12/10, dotnet 12/10, cpp 12/8,
-python 8/5, unity with stubs 12/5, unity with the real Editor 15/15–20 and unreal 20/30–60 (the last two unmeasured).
+Initial table (minutes, worker / one gate command): web 10/5 (measured), rust 12/10, dotnet 12/10, cpp 12/8,
+python 8/5, unity 15/15 (unmeasured). The values live in `[timing]` with a floor and a ceiling.
 
-Calibration is automatic:
-
-- **At `init`/first run**: run the gates cold and warm; the gate timeout is 3 × the measured value between the
-  stack's floor and ceiling; if the measurement is more than 5 × the table the author is asked to confirm; an empty
-  project keeps the table values and is flagged *provisional*; recalibrate after the first 3 finished tasks.
-- **Continuously**: record every gate pass and attempt duration in `.harness/state/` (per machine); timeout = p90
-  of the last 10 × a margin, clamped to floor/ceiling, rising quickly and falling slowly; a timed-out run raises the
-  limit ×1.5 up to the ceiling before escalating; a change of more than 2 × triggers a warning and recalibration.
-- Model speed (prefill and generation tokens/s) is measured once per model.
+- **`run_worker.py --calibrate`** (run by `/kickoff` when the project has gates that can run): runs each fast gate
+  command cold and warm; the gate timeout becomes 3 × the slowest command, between floor and ceiling. If that is more
+  than 5 × the table the author confirms with `--accept-calibration`. An empty project keeps the table values.
+- **Continuously**: every gate command and attempt duration is recorded in `.harness/state/timings.json` (per machine);
+  timeout = p90 of the last 10 × a margin (1.5 worker, 3 gates), clamped to floor/ceiling, rising at once and falling
+  slowly; a timed-out run raises the limit ×1.5 up to the ceiling.
+- Not built (dropped after the 2026-10-20 review, revisit only with evidence): a *provisional* flag, recalibration after
+  3 tasks, a warning when a timing changes more than 2 ×, measuring model speed in tokens/s, a start-up warning when the
+  fast gate does not fit its timeout.
 
 ## 9. Traceability: notes, `/harvest`, `/sync`
 
@@ -245,8 +248,8 @@ Calibration is automatic:
 | cpp | skeleton | build + tests (CMake/Make) | reuse compiler detection (g++/clang/MSVC) |
 | python | skeleton | `pytest` (+ `ruff`, `mypy` optional) | no compile step; venv permissions |
 
-Each stack has an `INIT.md` of at most 25 lines (create the project with its own tool, `git init`, `.gitignore`,
-`init.py`, record executable paths, `/kickoff`, `/plan`, first milestone) and a short "how to verify" section.
+Each stack has an `INIT.md` install guide (prerequisites, create the project with its own tool, `git init`,
+`.gitignore`, `init.py`, what happens after, `/sync` and `/harvest`) and a short "how to verify" section.
 Unreal can be added later as another stack.
 
 ## 11. Question bank per stack (examples)
@@ -274,7 +277,12 @@ project (a Unity one); `bench-site` already carries `[template]` data in its `ha
 - Resolved: stripping `thinking`/`output_config`/`context_management` in the proxy keeps quality and is much faster (L-024, L-025);
   it does not by itself explain the early output overflows (those need smaller tasks, L-003).
 - To measure on harder tasks: the thinking policy of §8.3 (only small, well-specified tasks so far).
-- Real Unity batch-mode timings; how to run Unity tests headless on the author's machine.
+- Real Unity batch-mode timings; how to run Unity tests headless on the author's machine. To check on the first Unity
+  project (review 2026-10-20): with `fast = []` any change passes unverified; whether `-quit` may be combined with
+  `-runTests`; batch mode fails while the Editor has the project open; an Editor path with spaces breaks the worker's
+  Bash allowance; `unity_path` in `stack.toml` is unused.
+- Windows: a gate or worker timeout kills only the direct child; grandchildren (`cmd` → `npm` → `node`) may keep the
+  pipes open and hang the run. Not reproduced yet; fix with a process-tree kill (`taskkill /T /F`) if it shows up.
 - Plain-HTML5 web projects: which gates make sense.
 - Future idea (not scheduled): Claude Code Projects (beta, Sept 2026) splits a goal across parallel cloud sessions. Cloud sessions clone the repo from GitHub and cannot reach the local model server, so they do not fit the local worker today. Revisit when Projects can run in a local environment; until then it could only take over the Claude-tier work (tasks that start at `claude-sonnet`) on stacks whose gates run in the cloud.
 - Future idea (not scheduled): a per-project `tool_guidance.md` (when to use which command, what to avoid) generated by `/kickoff`, and a short reflection step when a milestone closes that feeds `docs/guardrails.md`. Wait for evidence from a real project.

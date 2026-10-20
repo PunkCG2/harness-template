@@ -5,7 +5,7 @@ Reusable starter kit for AI-assisted development with a local-first worker. Read
 
 ## State (handoff)
 - Phases 1 and 2 are done: spec, lessons (L-001..L-035), `init.py`, core templates, six stack skeletons (web tested), the
-  unified worker `core/.harness/run_worker.py` (67 tests in `tests/`) and the skills kickoff, plan, task, qa, resume, sync
+  unified worker `core/.harness/run_worker.py` (70 tests in `tests/`) and the skills kickoff, plan, task, qa, resume, sync
   (+ harvest at the repo root).
 - First project that used it: `bench-site` (`E:\IA\bench-site`, a Vite site). Its `docs/harness-notes.md` has been harvested up to the
   commit that introduced this handoff; its `harness.toml` carries `[template] version` and `[sync] skip = [".claude/skills"]`
@@ -14,8 +14,9 @@ Reusable starter kit for AI-assisted development with a local-first worker. Read
   `/sync` from the project when this repository changes. The `unity` stack is a skeleton: real batch-mode timings, the headless test
   command and the stack questions are still to be confirmed. Compare the thinking policy (§8.3) on harder tasks.
 - Since then: kickoff question banks reviewed (L-034), full `INIT.md` per stack, README rewrite, `.gitignore`/`.gitattributes`,
-  and `docs/guardrails.md` per project (L-035). `bench-site` is aligned with template `96d2eb0`. A full review is requested:
-  start from `docs/review-brief.md`.
+  and `docs/guardrails.md` per project (L-035). A first full review (Opus, 2026-10-20) is done: see `docs/review-brief.md`; Unity gates and
+  the Windows timeout kill wait for the first Unity project (spec §13). `bench-site` is aligned with the template after that
+  review (its task front matter now uses the English keys).
 - Decisions to respect: no cost/token logging; no live progress display (L-033); local server address as `127.0.0.1` (L-026);
   tasks of at most ~3 files and ~15 spec lines; QA tasks live in `docs/tasks/qa/`.
 

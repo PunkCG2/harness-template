@@ -9,6 +9,10 @@ reviewer where to look. Read `CLAUDE.md`, `docs/spec.md` and `docs/lessons.md` f
 - `bench-site` (`E:\IA\bench-site`) is aligned with this template (its commit `b154cf3`). It has the author's own
   uncommitted work; do not touch it.
 
+## Review round 1 (2026-10-20, Opus)
+Findings 1-7 and 10-16 were fixed (commits after `7e12685`, see `CHANGELOG.md`). Deferred to the first Unity project
+(spec §13): Unity gates (8) and the Windows process-tree timeout (9). The state below is the one the review started from.
+
 ## What changed since the last harvest (cfa6e4d)
 1. Kickoff question banks: `core/.harness/questions/core.md`, `stacks/*/questions.md`, `core/.claude/skills/kickoff/SKILL.md`.
 2. Install guides: `stacks/*/INIT.md` (generated once; now plain files).

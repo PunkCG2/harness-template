@@ -1,4 +1,4 @@
 {
-  "allow": ["Bash(npm *)", "Bash(npx vitest *)"],
+  "allow": ["Bash(npm test*)", "Bash(npm run *)", "Bash(npx vitest *)"],
   "deny": []
 }

@@ -8,17 +8,20 @@ description: Runs one task from docs/tasks/ through the worker ladder, the autom
 ## 1. Prepare
 - Read the task. If scope or criteria are missing or not checkable, complete them first.
 - `git status` must be clean and on the base branch (`[project] base_branch` in `.harness/harness.toml`; empty means
-  `main` or `master`, whichever exists); otherwise stop and say so. Pick `next` = first `pendiente`
-  task whose dependencies are `hecha`, in milestone order.
-- Set `estado: en-curso`. Branch: `task/NNN-name`. Update `docs/progress/progress.md` (current task).
+  `main` or `master`, whichever exists); otherwise stop and say so. Pick `next` = first `pending`
+  task whose `depends` are all `done`, in milestone order.
+- Set `status: in-progress`. Branch: `task/NNN-name`. Update `docs/progress/progress.md` (current task).
 
-## 2. Delegate (unless `ejecuta: claude`)
+## 2. Delegate (unless `runner: claude`)
 ```
 python .harness/run_worker.py docs/tasks/NNN-name.md   # tasks from /qa live in docs/tasks/qa/
 ```
+`runner: claude-haiku` or `runner: claude-sonnet` → add `--start <runner>` so the ladder begins at that tier.
 If the exit code means "no model chosen", show the listed models to the author, ask which one and run again with
-`--model <id>`. Run it in the background (it can take minutes) and leave the tree alone while it runs. The script runs the ladder, the scope guard and the gates by itself and returns a **review brief**
-(diff stat, gate results, scope result, worker and rounds used). For `ejecuta: claude` implement it yourself on the
+`--model <id>`. Exit code 4 (ladder exhausted): the changes stay uncommitted on the task branch; read the brief and the
+log, then finish the task yourself (that is the `main-claude` step) or explain the blocker to the author. Exit code 6
+(another run is active): do not start a second one (L-030); wait for it, or ask the author whether to stop it. Run it in the background (it can take minutes) and leave the tree alone while it runs. The script runs the ladder, the scope guard and the gates by itself and returns a **review brief**
+(diff stat, gate results, scope result, worker and rounds used). For `runner: claude` implement it yourself on the
 branch and run the gates yourself.
 
 ## 3. Review (cheap)
@@ -34,7 +37,7 @@ overflowed. After round 3, fix small leftovers yourself or explain the blocker t
 ## 5. Approve
 - `git switch <base branch>`, `git merge --squash task/NNN-name`, commit `NNN: <summary>`, delete the branch
   (`git branch -D`: after a squash merge git does not see it as merged). If a dev server is running, touch the files that changed (`git diff --name-only HEAD~1 HEAD | xargs touch`) so it does not serve stale files after the branch switch.
-- Task: `estado: hecha`, `rondas: K`, one or two lines in review notes. Commit.
+- Task: `status: done`, `rounds: K`, one or two lines in review notes. Commit.
 - **Harness notes:** if the task needed escalation or more than one round, or anything about the harness itself was
   wrong, append an entry to `docs/harness-notes.md`.
 - **Guardrail sign:** if a correction round, an escalation or a repeatable defect had a cause a short rule would have
