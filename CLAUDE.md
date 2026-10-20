@@ -13,6 +13,9 @@ Reusable starter kit for AI-assisted development with a local-first worker. Read
 - **Next (phase 3):** use the template on a real Unity project (`init.py --stack unity`), then `/harvest <project>` for its notes and
   `/sync` from the project when this repository changes. The `unity` stack is a skeleton: real batch-mode timings, the headless test
   command and the stack questions are still to be confirmed. Compare the thinking policy (§8.3) on harder tasks.
+- Since then: kickoff question banks reviewed (L-034), full `INIT.md` per stack, README rewrite, `.gitignore`/`.gitattributes`,
+  and `docs/guardrails.md` per project (L-035). `bench-site` is aligned with template `96d2eb0`. A full review is requested:
+  start from `docs/review-brief.md`.
 - Decisions to respect: no cost/token logging; no live progress display (L-033); local server address as `127.0.0.1` (L-026);
   tasks of at most ~3 files and ~15 spec lines; QA tasks live in `docs/tasks/qa/`.
 
